@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -9,6 +9,7 @@ import { CustomerMode } from './pages/CustomerMode';
 import { StaffPosMode } from './pages/StaffPosMode';
 import { DesignerMode } from './pages/DesignerMode';
 import { AdminMode } from './pages/AdminMode';
+import { BombayDataStore } from './lib/storage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +22,10 @@ const queryClient = new QueryClient({
 
 const AppContent: React.FC = () => {
   const { currentRole } = useAuth();
+
+  useEffect(() => {
+    BombayDataStore.syncWithSupabase();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-ivory-50">

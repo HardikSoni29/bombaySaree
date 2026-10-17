@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { AppRole } from '../../types/database';
 import { ShoppingBag, Store, Palette, ShieldCheck, RefreshCw, UserCheck } from 'lucide-react';
 import { BombayDataStore } from '../../lib/storage';
+import { isSupabaseConfigured } from '../../lib/supabase';
 
 export const RoleSwitcherBar: React.FC = () => {
   const { currentRole, setRole, user, currentDesigner, allDesigners } = useAuth();
@@ -49,6 +50,12 @@ export const RoleSwitcherBar: React.FC = () => {
         </span>
         <span className="text-charcoal-400 hidden sm:inline">|</span>
         <span className="text-charcoal-300 hidden md:inline">Omnichannel Retail & Designer Marketplace</span>
+        {isSupabaseConfigured && (
+          <span className="hidden lg:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-950/80 text-emerald-400 border border-emerald-500/40">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            Supabase Live
+          </span>
+        )}
       </div>
 
       <div className="flex items-center gap-1.5 bg-charcoal-900/90 p-1 rounded-lg border border-charcoal-800">

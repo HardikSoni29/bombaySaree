@@ -92,7 +92,7 @@ create table public.store_locations (
 -- Designer Profiles & Onboarding
 create table public.designer_profiles (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null unique references public.profiles(id) on delete restrict,
+  user_id uuid unique references public.profiles(id) on delete restrict,
   brand_name text not null,
   contact_person text not null,
   email text not null,

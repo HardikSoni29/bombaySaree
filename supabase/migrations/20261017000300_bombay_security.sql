@@ -33,11 +33,9 @@ as $$
   limit 1;
 $$;
 
-revoke all on function private.has_role(public.app_role) from public, anon;
-revoke all on function private.current_designer_id() from public, anon;
-grant usage on schema private to authenticated;
-grant execute on function private.has_role(public.app_role) to authenticated;
-grant execute on function private.current_designer_id() to authenticated;
+grant usage on schema private to authenticated, anon;
+grant execute on function private.has_role(public.app_role) to authenticated, anon;
+grant execute on function private.current_designer_id() to authenticated, anon;
 
 -- Enable RLS on all tables
 alter table public.profiles enable row level security;

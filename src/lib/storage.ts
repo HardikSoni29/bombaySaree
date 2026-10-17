@@ -19,6 +19,7 @@ import {
   OwnershipType,
   StockCondition,
 } from '../types/database';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 import {
   initialLocations,
@@ -76,6 +77,61 @@ function save<T>(key: string, value: T): void {
 
 // Memory / LocalStorage Central Data Store
 export class BombayDataStore {
+  static async syncWithSupabase(): Promise<boolean> {
+    if (!isSupabaseConfigured || !supabase) return false;
+    try {
+      // 1. Locations
+      const { data: locations } = await supabase.from('store_locations').select('*');
+      if (locations && locations.length > 0) {
+        save(KEYS.LOCATIONS, locations);
+      }
+
+      // 2. Categories
+      const { data: categories } = await supabase.from('product_categories').select('*');
+      if (categories && categories.length > 0) {
+        save(KEYS.CATEGORIES, categories);
+      }
+
+      // 3. Designers
+      const { data: designers } = await supabase.from('designer_profiles').select('*');
+      if (designers && designers.length > 0) {
+        save(KEYS.DESIGNERS, designers);
+      }
+
+      // 4. Products with Images
+      const { data: prods } = await supabase.from('products').select('*, product_images(*)');
+      if (prods && prods.length > 0) {
+        const mappedProducts = prods.map((p: any) => ({
+          ...p,
+          images: p.product_images || [],
+          primary_image_url:
+            p.product_images?.find((img: any) => img.is_primary)?.image_url ||
+            p.product_images?.[0]?.image_url ||
+            'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+        }));
+        save(KEYS.PRODUCTS, mappedProducts);
+      }
+
+      // 5. Inventory Items
+      const { data: inventory } = await supabase.from('inventory_items').select('*');
+      if (inventory && inventory.length > 0) {
+        save(KEYS.INVENTORY, inventory);
+      }
+
+      // 6. Coupons
+      const { data: coupons } = await supabase.from('coupons').select('*');
+      if (coupons && coupons.length > 0) {
+        save(KEYS.COUPONS, coupons);
+      }
+
+      console.log('✅ Synchronized Bombay Saree with live Supabase database');
+      return true;
+    } catch (err) {
+      console.warn('Supabase sync notice (using offline cache):', err);
+      return false;
+    }
+  }
+
   static getLocations(): StoreLocation[] {
     return load<StoreLocation[]>(KEYS.LOCATIONS, initialLocations);
   }
