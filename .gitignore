@@ -11,6 +11,11 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*
+!.env.example
+migrate-supabase.cjs
+test-supabase.cjs
 
 # Editor directories and files
 .vscode/*
