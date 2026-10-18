@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Product } from '../../types/database';
-import { formatINR } from '../../lib/utils';
+import { formatINR, getProductImage, FALLBACK_SAREE_IMAGE } from '../../lib/utils';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { BombayDataStore } from '../../lib/storage';
@@ -58,8 +58,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         <div className="md:w-1/2 bg-ivory-100 p-4 sm:p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-ivory-300 overflow-y-auto">
           <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-md bg-white">
             <img
-              src={product.images[selectedImg] || product.images[0]}
+              src={getProductImage(product, selectedImg)}
               alt={product.name}
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src !== FALLBACK_SAREE_IMAGE) {
+                  target.src = FALLBACK_SAREE_IMAGE;
+                }
+              }}
               className="w-full h-full object-cover"
             />
             <div className="absolute top-3 left-3">
@@ -70,19 +76,30 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           </div>
 
           {/* Thumbnails */}
-          {product.images.length > 1 && (
+          {product.images && product.images.length > 1 && (
             <div className="flex gap-2 mt-4 overflow-x-auto pb-1">
-              {product.images.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedImg(idx)}
-                  className={`w-16 h-20 rounded-lg overflow-hidden border-2 transition flex-shrink-0 ${
-                    selectedImg === idx ? 'border-burgundy-900 shadow' : 'border-transparent opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
+              {product.images.map((img, idx) => {
+                const thumbUrl = typeof img === 'string' ? img : (img as any)?.image_url || FALLBACK_SAREE_IMAGE;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImg(idx)}
+                    className={`w-16 h-20 rounded-lg overflow-hidden border-2 transition flex-shrink-0 ${
+                      selectedImg === idx ? 'border-burgundy-900 shadow' : 'border-transparent opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <img
+                      src={thumbUrl}
+                      alt=""
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (target.src !== FALLBACK_SAREE_IMAGE) target.src = FALLBACK_SAREE_IMAGE;
+                      }}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

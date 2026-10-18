@@ -104,6 +104,7 @@ export interface Product {
   new_arrival: boolean;
   tags: string[];
   images: string[];
+  primary_image_url?: string;
   created_at: string;
   updated_at: string;
   // Computed / joined fields

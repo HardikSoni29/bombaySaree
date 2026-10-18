@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { BombayDataStore } from '../lib/storage';
 import { Product, Sale } from '../types/database';
-import { formatINR } from '../lib/utils';
+import { formatINR, getProductImage, FALLBACK_SAREE_IMAGE } from '../lib/utils';
 import { CustomerHeader } from '../components/customer/CustomerHeader';
 import { HeroBanner } from '../components/customer/HeroBanner';
 import { ProductCard } from '../components/customer/ProductCard';
@@ -268,8 +268,12 @@ export const CustomerMode: React.FC = () => {
                   >
                     <div className="flex items-center gap-3">
                       <img
-                        src={w.product?.images[0]}
+                        src={getProductImage(w.product)}
                         alt=""
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (target.src !== FALLBACK_SAREE_IMAGE) target.src = FALLBACK_SAREE_IMAGE;
+                        }}
                         className="w-14 h-18 object-cover rounded-lg"
                       />
                       <div>

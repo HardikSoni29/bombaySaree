@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCart } from '../../context/CartContext';
-import { formatINR } from '../../lib/utils';
+import { formatINR, getProductImage, FALLBACK_SAREE_IMAGE } from '../../lib/utils';
 import { X, Trash2, ArrowRight, Tag, ShieldCheck, ShoppingBag, Sparkles } from 'lucide-react';
 
 interface CartDrawerProps {
@@ -85,8 +85,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onCheck
                   className="flex gap-4 p-3 bg-ivory-50 rounded-xl border border-ivory-300 relative group"
                 >
                   <img
-                    src={item.product.images[0]}
+                    src={getProductImage(item.product)}
                     alt={item.product.name}
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (target.src !== FALLBACK_SAREE_IMAGE) target.src = FALLBACK_SAREE_IMAGE;
+                    }}
                     className="w-20 h-24 object-cover rounded-lg flex-shrink-0 shadow-sm"
                   />
                   <div className="flex-1 flex flex-col justify-between">

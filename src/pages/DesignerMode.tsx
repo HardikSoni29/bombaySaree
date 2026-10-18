@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { BombayDataStore } from '../lib/storage';
 import { Product, SaleAllocation, DesignerLedgerEntry, Payout, InventoryItem } from '../types/database';
-import { formatINR, formatDateTime, formatDate } from '../lib/utils';
+import { formatINR, formatDateTime, formatDate, getProductImage, FALLBACK_SAREE_IMAGE } from '../lib/utils';
 import {
   Palette,
   Package,
@@ -396,7 +396,15 @@ export const DesignerMode: React.FC = () => {
               {products.map((p) => (
                 <div key={p.id} className="bg-white rounded-xl border border-ivory-300 p-4 shadow-sm flex flex-col justify-between">
                   <div className="space-y-3">
-                    <img src={p.images[0]} alt={p.name} className="w-full h-44 object-cover rounded-lg" />
+                    <img
+                      src={getProductImage(p)}
+                      alt={p.name}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (target.src !== FALLBACK_SAREE_IMAGE) target.src = FALLBACK_SAREE_IMAGE;
+                      }}
+                      className="w-full h-44 object-cover rounded-lg"
+                    />
                     <div>
                       <div className="flex justify-between items-center text-[10px] text-charcoal-500 font-mono">
                         <span>SKU: {p.sku}</span>

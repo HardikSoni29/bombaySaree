@@ -101,14 +101,23 @@ export class BombayDataStore {
       // 4. Products with Images
       const { data: prods } = await supabase.from('products').select('*, product_images(*)');
       if (prods && prods.length > 0) {
-        const mappedProducts = prods.map((p: any) => ({
-          ...p,
-          images: p.product_images || [],
-          primary_image_url:
-            p.product_images?.find((img: any) => img.is_primary)?.image_url ||
-            p.product_images?.[0]?.image_url ||
-            'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
-        }));
+        const mappedProducts = prods.map((p: any) => {
+          const rawImgs = Array.isArray(p.product_images) ? p.product_images : [];
+          const stringUrls: string[] = rawImgs
+            .map((img: any) => (typeof img === 'string' ? img : img?.image_url))
+            .filter(Boolean);
+
+          const primaryUrl =
+            rawImgs.find((img: any) => img.is_primary)?.image_url ||
+            stringUrls[0] ||
+            'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80';
+
+          return {
+            ...p,
+            images: stringUrls.length > 0 ? stringUrls : [primaryUrl],
+            primary_image_url: primaryUrl,
+          };
+        });
         save(KEYS.PRODUCTS, mappedProducts);
       }
 
@@ -157,8 +166,21 @@ export class BombayDataStore {
         (i) => i.product_id === prod.id && i.status === 'available' && i.condition === 'sellable'
       ).length;
 
+      // Ensure clean string array of images
+      const rawImgs = Array.isArray(prod.images) ? prod.images : [];
+      const cleanImages: string[] = rawImgs
+        .map((img: any) => (typeof img === 'string' ? img : img?.image_url))
+        .filter(Boolean);
+
+      const fallbackImage =
+        prod.primary_image_url ||
+        cleanImages[0] ||
+        'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80';
+
       return {
         ...prod,
+        images: cleanImages.length > 0 ? cleanImages : [fallbackImage],
+        primary_image_url: fallbackImage,
         designer,
         category,
         available_stock_count,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Product } from '../../types/database';
-import { formatINR } from '../../lib/utils';
+import { formatINR, getProductImage, FALLBACK_SAREE_IMAGE } from '../../lib/utils';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { BombayDataStore } from '../../lib/storage';
@@ -38,6 +38,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
+  const imageUrl = getProductImage(product);
+
   return (
     <div
       onClick={() => onSelect(product)}
@@ -46,8 +48,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Visual Image Container */}
       <div className="relative aspect-[3/4] bg-ivory-100 overflow-hidden">
         <img
-          src={product.images[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80'}
+          src={imageUrl}
           alt={product.name}
+          onError={(e) => {
+            const target = e.currentTarget;
+            if (target.src !== FALLBACK_SAREE_IMAGE) {
+              target.src = FALLBACK_SAREE_IMAGE;
+            }
+          }}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
         />
 

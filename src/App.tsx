@@ -24,6 +24,12 @@ const AppContent: React.FC = () => {
   const { currentRole } = useAuth();
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem('bombay_products_v1');
+      if (stored && (stored.includes('[object Object]') || !stored.includes('https://'))) {
+        localStorage.removeItem('bombay_products_v1');
+      }
+    } catch {}
     BombayDataStore.syncWithSupabase();
   }, []);
 

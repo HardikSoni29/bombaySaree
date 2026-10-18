@@ -63,3 +63,35 @@ export function generateBarcodeString(prefix = 'BS'): string {
   }
   return `${prefix}-${rand}`;
 }
+
+export const FALLBACK_SAREE_IMAGE =
+  'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80';
+
+// Safe Product Image Resolver (handles string, object, or arrays from DB)
+export function getProductImage(product?: any, index = 0): string {
+  if (!product) return FALLBACK_SAREE_IMAGE;
+
+  // 1. Check primary_image_url
+  if (product.primary_image_url && typeof product.primary_image_url === 'string') {
+    return product.primary_image_url;
+  }
+
+  // 2. Check images array
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    const item = product.images[index] ?? product.images[0];
+    if (typeof item === 'string' && item.startsWith('http')) return item;
+    if (item && typeof item === 'object') {
+      const url = item.image_url || item.url || item.src;
+      if (typeof url === 'string' && url.startsWith('http')) return url;
+    }
+  }
+
+  // 3. Check product_images from raw DB query
+  if (Array.isArray(product.product_images) && product.product_images.length > 0) {
+    const item = product.product_images[index] ?? product.product_images[0];
+    if (item?.image_url && typeof item.image_url === 'string') return item.image_url;
+  }
+
+  return FALLBACK_SAREE_IMAGE;
+}
+
