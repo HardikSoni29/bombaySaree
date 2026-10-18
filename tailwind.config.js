@@ -59,8 +59,10 @@ export default {
         }
       },
       fontFamily: {
-        serif: ['"Playfair Display"', 'Georgia', 'Cambria', 'serif'],
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        brand: ['Cinzel', 'Playfair Display', 'serif'],
+        display: ['"Cormorant Garamond"', '"Playfair Display"', 'Georgia', 'serif'],
+        serif: ['"Cormorant Garamond"', '"Playfair Display"', 'Georgia', 'serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       boxShadow: {
         'luxury': '0 4px 25px -4px rgba(84, 18, 33, 0.08), 0 2px 10px -2px rgba(84, 18, 33, 0.04)',

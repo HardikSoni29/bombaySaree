@@ -293,15 +293,15 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
           </div>
 
           {/* Secondary Category Navigation */}
-          <nav className="flex items-center justify-start sm:justify-center overflow-x-auto py-2.5 gap-2 sm:gap-6 border-t border-ivory-200 text-xs font-medium no-scrollbar">
+          <nav className="flex items-center justify-start sm:justify-center overflow-x-auto py-3 gap-3 sm:gap-8 border-t border-ivory-200 text-xs sm:text-sm font-serif tracking-wide no-scrollbar">
             {categories.map((cat) => (
               <button
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}
-                className={`whitespace-nowrap pb-1 border-b-2 transition ${
+                className={`whitespace-nowrap pb-1.5 border-b-2 transition-all ${
                   selectedCategory === cat.value
-                    ? 'border-burgundy-800 text-burgundy-900 font-bold'
-                    : 'border-transparent text-charcoal-600 hover:text-burgundy-900 hover:border-ivory-400'
+                    ? 'border-gold-600 text-burgundy-950 font-bold'
+                    : 'border-transparent text-charcoal-600 hover:text-burgundy-900 hover:border-gold-300'
                 }`}
               >
                 {cat.label}
