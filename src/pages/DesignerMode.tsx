@@ -20,6 +20,7 @@ import {
   Building,
   CreditCard,
   X,
+  LogOut,
 } from 'lucide-react';
 
 export const DesignerMode: React.FC = () => {
@@ -160,6 +161,15 @@ export const DesignerMode: React.FC = () => {
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>Submit Saree Collection</span>
+              </button>
+
+              <button
+                onClick={() => setRole('customer')}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-full font-semibold text-xs tracking-wider uppercase transition bg-burgundy-950/80 hover:bg-burgundy-900 text-ivory-200 border border-gold-500/30"
+                title="Return to online shopping boutique"
+              >
+                <LogOut className="w-3.5 h-3.5 text-gold-400" />
+                <span className="hidden sm:inline">Exit to Store</span>
               </button>
             </div>
           </div>

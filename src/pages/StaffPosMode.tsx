@@ -30,6 +30,7 @@ import {
   ChevronRight,
   AlertCircle,
   X,
+  LogOut,
 } from 'lucide-react';
 
 export const StaffPosMode: React.FC = () => {
@@ -58,7 +59,7 @@ export const StaffPosMode: React.FC = () => {
     setLastCompletedSale,
   } = usePos();
 
-  const { user } = useAuth();
+  const { user, setRole, logout } = useAuth();
   const [barcodeInput, setBarcodeInput] = useState<string>('');
   const [scanFeedback, setScanFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [catalogSearch, setCatalogSearch] = useState<string>('');
@@ -176,6 +177,15 @@ export const StaffPosMode: React.FC = () => {
           >
             <RotateCcw className="w-3.5 h-3.5 text-blue-400" />
             <span className="hidden sm:inline">Returns</span>
+          </button>
+
+          <button
+            onClick={() => setRole('customer')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-burgundy-950 hover:bg-burgundy-900 text-gold-300 border border-gold-600/30 transition text-xs font-semibold ml-1"
+            title="Exit POS and return to customer boutique"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Exit POS</span>
           </button>
         </div>
       </div>

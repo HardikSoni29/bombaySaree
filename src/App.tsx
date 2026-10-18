@@ -35,8 +35,8 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-ivory-50">
-      {/* Top Demo & Role Switcher Bar */}
-      <RoleSwitcherBar />
+      {/* Top Admin Omnichannel Switcher Bar — ONLY visible to Admin */}
+      {currentRole === 'admin' && <RoleSwitcherBar />}
 
       {/* Role-Based Mode Router */}
       <div className="flex-1">
