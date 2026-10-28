@@ -14,6 +14,8 @@ import {
   Palette,
   Store,
   ShieldCheck,
+  Barcode,
+  Award,
 } from 'lucide-react';
 import { BombayDataStore } from '../../lib/storage';
 import { AuthModal } from '../auth/AuthModal';
@@ -22,6 +24,7 @@ interface CustomerHeaderProps {
   onOpenCart: () => void;
   onOpenWishlist: () => void;
   onOpenOrders: () => void;
+  onOpenBarcodeVerifier: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   selectedCategory: string;
@@ -32,6 +35,7 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
   onOpenCart,
   onOpenWishlist,
   onOpenOrders,
+  onOpenBarcodeVerifier,
   searchQuery,
   setSearchQuery,
   selectedCategory,
@@ -54,7 +58,7 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
     { label: 'Organza & Pichwai', value: 'cat-organza' },
   ];
 
-  const openAuth = (tab: 'customer' | 'designer' | 'staff' | 'admin') => {
+  const openAuth = (tab: 'customer' | 'designer' | 'staff' | 'admin' = 'customer') => {
     setAuthModalTab(tab);
     setShowAuthModal(true);
   };
@@ -62,45 +66,28 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
   return (
     <>
       <header className="sticky top-0 z-40 bg-ivory-50/95 backdrop-blur-md border-b border-ivory-300 transition-all shadow-sm">
-        {/* Top Micro Announcement & Portal Access */}
-        <div className="bg-burgundy-950 text-gold-300 text-[11px] py-1.5 px-4 tracking-wider uppercase font-medium flex flex-wrap items-center justify-between gap-2 border-b border-gold-900/40">
+        {/* Top Micro Announcement (30% Royal Burgundy, NO staff/admin links visible to customers) */}
+        <div className="bg-[#24060C] text-gold-300 text-[11px] py-1.5 px-4 tracking-wider uppercase font-medium flex flex-wrap items-center justify-between gap-2 border-b border-gold-900/40">
           <div className="flex items-center gap-2 mx-auto sm:mx-0">
             <Sparkles className="w-3.5 h-3.5 text-gold-400" />
-            <span>Festive Atelier Edit • Complimentary Insured Delivery • Kala Ghoda Flagship Studio</span>
+            <span>Festive Atelier Edit • Complimentary Insured Studio Delivery • Kala Ghoda Flagship Studio</span>
           </div>
 
-          <div className="flex items-center gap-4 text-[10px] mx-auto sm:mx-0 lowercase text-ivory-300">
-            <button
-              onClick={() => openAuth('designer')}
-              className="hover:text-gold-300 flex items-center gap-1 font-semibold uppercase tracking-wider transition"
-            >
-              <Palette className="w-3 h-3 text-gold-400" />
-              <span>Sell With Us (Designer Portal)</span>
-            </button>
+          <div className="hidden md:flex items-center gap-4 text-[10px] text-ivory-300">
+            <span className="flex items-center gap-1 text-gold-400 font-serif">
+              <Award className="w-3 h-3" />
+              <span>Govt. Certified Silk Mark Handlooms</span>
+            </span>
             <span className="text-burgundy-800">|</span>
-            <button
-              onClick={() => openAuth('staff')}
-              className="hover:text-gold-300 flex items-center gap-1 uppercase tracking-wider transition"
-            >
-              <Store className="w-3 h-3" />
-              <span>Store Staff</span>
-            </button>
-            <span className="text-burgundy-800">|</span>
-            <button
-              onClick={() => openAuth('admin')}
-              className="hover:text-gold-300 flex items-center gap-1 uppercase tracking-wider transition"
-            >
-              <ShieldCheck className="w-3 h-3" />
-              <span>Admin</span>
-            </button>
+            <span className="text-ivory-400">Concierge: +91 22 2284 5600</span>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20 gap-4">
-            {/* Logo / Studio Identity */}
+            {/* Logo / Studio Identity (Couture Typography) */}
             <div className="flex flex-col cursor-pointer" onClick={() => setSelectedCategory('all')}>
-              <span className="font-brand text-2xl sm:text-3xl font-bold tracking-[0.2em] text-burgundy-950 uppercase leading-none">
+              <span className="font-brand text-2xl sm:text-3xl font-bold tracking-[0.22em] text-burgundy-950 uppercase leading-none">
                 BOMBAY SAREE
               </span>
               <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.3em] text-gold-700 font-serif mt-1 font-semibold">
@@ -108,30 +95,52 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
               </span>
             </div>
 
-            {/* Search bar */}
-            <div className="hidden md:flex flex-1 max-w-md relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search silk, zari, Kanjivaram, designer..."
-                className="w-full bg-ivory-100 border border-ivory-300 rounded-full py-2 pl-10 pr-4 text-sm text-charcoal-900 placeholder-charcoal-400 focus:outline-none focus:ring-2 focus:ring-burgundy-800/40 focus:border-burgundy-800 transition"
-              />
-              <Search className="w-4 h-4 text-charcoal-400 absolute left-3.5 top-3" />
+            {/* Search bar & Barcode Scanner Trigger */}
+            <div className="hidden md:flex flex-1 max-w-lg items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search silk, zari, Kanjivaram, designer..."
+                  className="w-full bg-white border border-ivory-300 rounded-full py-2 pl-10 pr-4 text-xs font-serif text-charcoal-900 placeholder-charcoal-400 focus:outline-none focus:ring-1 focus:ring-burgundy-900 focus:border-burgundy-900 transition shadow-2xs"
+                />
+                <Search className="w-4 h-4 text-charcoal-400 absolute left-3.5 top-2.5" />
+              </div>
+
+              {/* Barcode Drape Verifier Button */}
+              <button
+                type="button"
+                onClick={onOpenBarcodeVerifier}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-ivory-100 hover:bg-ivory-200 text-burgundy-950 font-serif text-xs font-semibold border border-gold-500/40 hover:border-gold-500 transition shadow-2xs whitespace-nowrap"
+                title="Scan or Verify Saree Barcode Tag"
+              >
+                <Barcode className="w-4 h-4 text-gold-700" />
+                <span className="hidden xl:inline">Verify Barcode</span>
+              </button>
             </div>
 
             {/* Action icons */}
-            <div className="flex items-center gap-3 sm:gap-5 text-charcoal-800">
-              {/* Store visit indicator */}
-              <div className="hidden xl:flex items-center gap-1.5 text-xs text-charcoal-600 bg-ivory-200/60 px-3 py-1.5 rounded-full border border-ivory-300">
+            <div className="flex items-center gap-2.5 sm:gap-4 text-charcoal-800">
+              {/* Mobile Barcode Scanner icon */}
+              <button
+                onClick={onOpenBarcodeVerifier}
+                className="flex md:hidden p-2 text-burgundy-900 hover:text-gold-700 transition"
+                title="Scan Barcode Tag"
+              >
+                <Barcode className="w-5 h-5" />
+              </button>
+
+              {/* Studio visit indicator */}
+              <div className="hidden lg:flex items-center gap-1.5 text-xs text-charcoal-600 bg-ivory-200/60 px-3 py-1.5 rounded-full border border-ivory-300">
                 <MapPin className="w-3.5 h-3.5 text-burgundy-800" />
-                <span>Kala Ghoda Flagship</span>
+                <span className="font-serif">Kala Ghoda Studio</span>
               </div>
 
               {/* My Orders */}
               <button
                 onClick={onOpenOrders}
-                className="flex items-center gap-1 text-xs font-medium hover:text-burgundy-900 transition"
+                className="flex items-center gap-1 text-xs font-serif font-medium hover:text-burgundy-900 transition"
                 title="Track Orders & Invoices"
               >
                 <PackageCheck className="w-5 h-5 text-charcoal-700 hover:text-burgundy-900 transition" />
@@ -146,20 +155,20 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
               >
                 <Heart className="w-5 h-5" />
                 {wishlistCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-burgundy-800 text-gold-200 text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 bg-burgundy-900 text-gold-200 text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                     {wishlistCount}
                   </span>
                 )}
               </button>
 
-              {/* Shopping Cart */}
+              {/* Shopping Bag (10% Gold CTA Accent) */}
               <button
                 onClick={onOpenCart}
-                className="relative flex items-center gap-2 bg-burgundy-900 hover:bg-burgundy-950 text-gold-200 px-3.5 sm:px-4 py-2 rounded-full font-medium text-xs shadow-md transition hover:shadow-lg"
+                className="relative flex items-center gap-2 bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-burgundy-950 px-3.5 sm:px-4 py-2 rounded-full font-serif font-bold text-xs shadow-md transition hover:shadow-lg"
               >
-                <ShoppingBag className="w-4 h-4 text-gold-300" />
+                <ShoppingBag className="w-4 h-4" />
                 <span className="hidden sm:inline">Bag</span>
-                <span className="bg-gold-500 text-burgundy-950 font-bold px-1.5 py-0.2 text-[11px] rounded-full min-w-4 text-center">
+                <span className="bg-burgundy-950 text-gold-200 font-mono font-bold px-1.5 py-0.2 text-[10px] rounded-full min-w-4 text-center">
                   {itemCount}
                 </span>
               </button>
@@ -218,7 +227,7 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
                           </button>
                         </div>
 
-                        {/* Special Role Portals if applicable */}
+                        {/* Special Role Portals ONLY visible if already logged into that role or admin */}
                         {(user.role === 'designer' || user.role === 'admin') && (
                           <div className="py-1 border-t border-ivory-200">
                             <button
@@ -282,9 +291,9 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
                 ) : (
                   <button
                     onClick={() => openAuth('customer')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-burgundy-900/30 hover:border-burgundy-900 text-burgundy-950 hover:bg-ivory-200 transition text-xs font-semibold"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-burgundy-900/40 hover:border-burgundy-900 text-burgundy-950 hover:bg-ivory-200 transition text-xs font-serif font-semibold shadow-2xs"
                   >
-                    <User className="w-4 h-4 text-burgundy-900" />
+                    <User className="w-3.5 h-3.5 text-burgundy-900" />
                     <span>Sign In</span>
                   </button>
                 )}
@@ -311,7 +320,7 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
         </div>
       </header>
 
-      {/* Auth Modal */}
+      {/* Auth Modal (Pure Customer Mode by default) */}
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}

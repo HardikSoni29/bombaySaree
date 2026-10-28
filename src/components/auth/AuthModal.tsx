@@ -16,6 +16,7 @@ import {
   Building,
   KeyRound,
   AlertCircle,
+  ArrowLeft,
 } from 'lucide-react';
 
 interface AuthModalProps {
@@ -24,7 +25,11 @@ interface AuthModalProps {
   initialTab?: 'customer' | 'designer' | 'staff' | 'admin';
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTab = 'customer' }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({
+  isOpen,
+  onClose,
+  initialTab = 'customer',
+}) => {
   const {
     loginAsCustomer,
     loginAsDesigner,
@@ -35,7 +40,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
     allDesigners,
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'customer' | 'designer' | 'staff' | 'admin'>(initialTab);
+  // If initialTab is staff/designer/admin, open in partner gateway mode; otherwise pure customer mode
+  const [isPartnerGateway, setIsPartnerGateway] = useState<boolean>(initialTab !== 'customer');
+  const [partnerTab, setPartnerTab] = useState<'staff' | 'designer' | 'admin'>(
+    initialTab === 'customer' ? 'staff' : initialTab
+  );
 
   // Customer Form State
   const [customerMode, setCustomerMode] = useState<'signin' | 'signup'>('signin');
@@ -44,7 +53,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
   const [custName, setCustName] = useState('');
 
   // Designer Form State
-  const [designerAction, setDesignerAction] = useState<'apply' | 'login'>('apply');
+  const [designerAction, setDesignerAction] = useState<'login' | 'apply'>('login');
   const [brandName, setBrandName] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [designerEmail, setDesignerEmail] = useState('');
@@ -70,8 +79,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
   const handleCustomerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     loginAsCustomer({
-      email: custEmail || 'ananya.singhania@heritage.org',
-      name: custName || 'Ananya Singhania',
+      email: custEmail || 'priya.mehta@example.com',
+      name: custName || 'Priya Mehta',
     });
     onClose();
   };
@@ -94,7 +103,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
       business_address: `${city}, ${state}`,
       brand_story: brandStory || 'Luxury handloom drapes crafted with traditional artisans.',
       default_commission_rate: 0.28,
-      approval_status: 'pending', // Key requirement: Admin approval required!
+      approval_status: 'pending',
     });
 
     onClose();
@@ -129,15 +138,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
     if (ok) {
       onClose();
     } else {
-      setAdminError('Invalid Admin credentials.');
+      setAdminError('Invalid Admin credentials. (Default demo is admin123)');
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/70 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/75 backdrop-blur-sm animate-fadeIn">
       <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-gold-500/30 flex flex-col max-h-[92vh]">
-        {/* Modal Header */}
-        <div className="bg-gradient-to-r from-burgundy-950 via-burgundy-900 to-burgundy-950 p-6 text-white relative">
+        {/* Modal Header: 30% Royal Burgundy */}
+        <div className="bg-gradient-to-r from-burgundy-950 via-burgundy-900 to-burgundy-950 p-6 text-white relative border-b border-gold-500/30">
           <button
             onClick={onClose}
             className="absolute top-5 right-5 p-2 rounded-full bg-white/10 hover:bg-white/20 text-ivory-200 transition"
@@ -145,93 +154,97 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-2 text-gold-400 text-xs font-serif uppercase tracking-widest mb-1 font-semibold">
-            <Sparkles className="w-4 h-4" />
-            <span>Bombay Saree Studio Identity</span>
-          </div>
-          <h3 className="font-serif text-2xl font-bold text-ivory-50">
-            Sign In & Portals
-          </h3>
-          <p className="text-xs text-ivory-200/80 font-light mt-0.5">
-            Select your role to access online shopping, designer collections, POS, or management.
-          </p>
+          {!isPartnerGateway ? (
+            /* Standard Customer Header */
+            <div>
+              <div className="flex items-center gap-2 text-gold-400 text-xs font-serif uppercase tracking-[0.2em] mb-1 font-semibold">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Bombay Saree Studio</span>
+              </div>
+              <h3 className="font-serif text-2xl font-bold text-ivory-50">
+                {customerMode === 'signin' ? 'Sign In to Your Account' : 'Create Customer Account'}
+              </h3>
+              <p className="text-xs text-ivory-200/80 font-light mt-0.5">
+                Access curated bridal trousseaus, wishlist heloirloms & track studio orders.
+              </p>
+            </div>
+          ) : (
+            /* Staff / Partner Gateway Header */
+            <div>
+              <button
+                onClick={() => setIsPartnerGateway(false)}
+                className="flex items-center gap-1.5 text-xs text-gold-300 hover:text-white mb-2 font-medium transition"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Customer Store</span>
+              </button>
+              <h3 className="font-serif text-2xl font-bold text-ivory-50">
+                Studio Staff & Partner Portal
+              </h3>
+              <p className="text-xs text-ivory-200/80 font-light mt-0.5">
+                Restricted access for Kala Ghoda store staff, consignment designers & studio administrators.
+              </p>
 
-          {/* Primary Role Selector Tabs */}
-          <div className="grid grid-cols-4 gap-1.5 mt-5 bg-charcoal-900/60 p-1.5 rounded-2xl border border-gold-500/20 text-xs">
-            <button
-              onClick={() => setActiveTab('customer')}
-              className={`flex flex-col items-center gap-1 py-2 rounded-xl font-medium transition ${
-                activeTab === 'customer'
-                  ? 'bg-gold-500 text-burgundy-950 font-bold shadow-md'
-                  : 'text-ivory-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <ShoppingBag className="w-4 h-4" />
-              <span>Customer</span>
-            </button>
+              {/* Partner Tabs */}
+              <div className="grid grid-cols-3 gap-1.5 mt-4 bg-charcoal-950/60 p-1.5 rounded-2xl border border-gold-500/20 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setPartnerTab('staff')}
+                  className={`py-2 rounded-xl font-medium transition flex items-center justify-center gap-1.5 ${
+                    partnerTab === 'staff'
+                      ? 'bg-gold-500 text-burgundy-950 font-bold shadow-md'
+                      : 'text-ivory-300 hover:text-white'
+                  }`}
+                >
+                  <Store className="w-3.5 h-3.5" />
+                  <span>Store POS</span>
+                </button>
 
-            <button
-              onClick={() => setActiveTab('designer')}
-              className={`flex flex-col items-center gap-1 py-2 rounded-xl font-medium transition ${
-                activeTab === 'designer'
-                  ? 'bg-gold-500 text-burgundy-950 font-bold shadow-md'
-                  : 'text-ivory-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Palette className="w-4 h-4" />
-              <span>Designer</span>
-            </button>
+                <button
+                  type="button"
+                  onClick={() => setPartnerTab('designer')}
+                  className={`py-2 rounded-xl font-medium transition flex items-center justify-center gap-1.5 ${
+                    partnerTab === 'designer'
+                      ? 'bg-gold-500 text-burgundy-950 font-bold shadow-md'
+                      : 'text-ivory-300 hover:text-white'
+                  }`}
+                >
+                  <Palette className="w-3.5 h-3.5" />
+                  <span>Designer</span>
+                </button>
 
-            <button
-              onClick={() => setActiveTab('staff')}
-              className={`flex flex-col items-center gap-1 py-2 rounded-xl font-medium transition ${
-                activeTab === 'staff'
-                  ? 'bg-gold-500 text-burgundy-950 font-bold shadow-md'
-                  : 'text-ivory-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Store className="w-4 h-4" />
-              <span>Store POS</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('admin')}
-              className={`flex flex-col items-center gap-1 py-2 rounded-xl font-medium transition ${
-                activeTab === 'admin'
-                  ? 'bg-gold-500 text-burgundy-950 font-bold shadow-md'
-                  : 'text-ivory-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Admin</span>
-            </button>
-          </div>
+                <button
+                  type="button"
+                  onClick={() => setPartnerTab('admin')}
+                  className={`py-2 rounded-xl font-medium transition flex items-center justify-center gap-1.5 ${
+                    partnerTab === 'admin'
+                      ? 'bg-gold-500 text-burgundy-950 font-bold shadow-md'
+                      : 'text-ivory-300 hover:text-white'
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Admin</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Modal Scrollable Body */}
-        <div className="p-6 overflow-y-auto space-y-5">
+        {/* Modal Scrollable Body: 60% Ivory Canvas */}
+        <div className="p-6 overflow-y-auto space-y-5 bg-[#FAF8F5]">
           {/* ========================================================================= */}
-          {/* TAB 1: CUSTOMER (DEFAULT) */}
+          {/* CUSTOMER MODE (DEFAULT FOR SHOPPERS) */}
           {/* ========================================================================= */}
-          {activeTab === 'customer' && (
+          {!isPartnerGateway && (
             <div className="space-y-4">
-              <div className="text-center space-y-1">
-                <h4 className="font-serif text-lg font-bold text-charcoal-900">
-                  {customerMode === 'signin' ? 'Welcome Back to Bombay Saree' : 'Create Customer Account'}
-                </h4>
-                <p className="text-xs text-charcoal-500">
-                  By default, all registered users browse and shop our luxury handloom collections.
-                </p>
-              </div>
-
-              {/* Continue with Google */}
+              {/* Google OAuth Login */}
               <button
                 onClick={async () => {
                   await loginWithGoogle();
                   onClose();
                 }}
                 type="button"
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-ivory-300 bg-white hover:bg-ivory-100 text-charcoal-800 font-semibold text-xs transition shadow-sm"
+                className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl border border-ivory-300 bg-white hover:bg-ivory-100 text-charcoal-800 font-semibold text-xs transition shadow-sm"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path
@@ -240,296 +253,326 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
                   />
                   <path
                     fill="#34A853"
-                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.27v3.15C3.26 21.36 7.33 24 12 24z"
                   />
                   <path
                     fill="#FBBC05"
-                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.27C.46 8.2 0 10.04 0 12s.46 3.8 1.27 5.42l4.01-3.15z"
                   />
                   <path
                     fill="#EA4335"
-                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.27 6.58l4.01 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
                   />
                 </svg>
                 <span>Continue with Google</span>
               </button>
 
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-ivory-200"></div>
-                <span className="text-[10px] text-charcoal-400 uppercase tracking-widest font-semibold">Or with Email</span>
-                <div className="flex-1 h-px bg-ivory-200"></div>
+              <div className="flex items-center gap-3 my-2">
+                <div className="h-px bg-ivory-300 flex-1" />
+                <span className="text-[11px] font-mono text-charcoal-400 uppercase tracking-widest">
+                  or email sign in
+                </span>
+                <div className="h-px bg-ivory-300 flex-1" />
               </div>
 
-              <form onSubmit={handleCustomerSubmit} className="space-y-3">
+              {/* Email Form */}
+              <form onSubmit={handleCustomerSubmit} className="space-y-3.5">
                 {customerMode === 'signup' && (
                   <div>
-                    <label className="block text-[11px] font-medium text-charcoal-600 mb-1">Full Name</label>
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1">
+                      Full Name
+                    </label>
                     <div className="relative">
                       <input
                         type="text"
                         value={custName}
                         onChange={(e) => setCustName(e.target.value)}
-                        placeholder="Ananya Singhania"
-                        required
-                        className="w-full bg-ivory-50 border border-ivory-300 rounded-xl py-2 pl-9 pr-3 text-xs focus:ring-2 focus:ring-burgundy-800"
+                        placeholder="e.g. Priya Mehta"
+                        className="w-full bg-white border border-ivory-300 rounded-xl py-2.5 pl-10 pr-4 text-xs text-charcoal-900 focus:outline-none focus:ring-1 focus:ring-burgundy-900"
                       />
-                      <User className="w-4 h-4 text-charcoal-400 absolute left-3 top-2.5" />
+                      <User className="w-4 h-4 text-charcoal-400 absolute left-3 top-3" />
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-[11px] font-medium text-charcoal-600 mb-1">Email Address</label>
+                  <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1">
+                    Email Address
+                  </label>
                   <div className="relative">
                     <input
                       type="email"
                       value={custEmail}
                       onChange={(e) => setCustEmail(e.target.value)}
-                      placeholder="ananya@example.com"
-                      required
-                      className="w-full bg-ivory-50 border border-ivory-300 rounded-xl py-2 pl-9 pr-3 text-xs focus:ring-2 focus:ring-burgundy-800"
+                      placeholder="e.g. priya.mehta@example.com"
+                      className="w-full bg-white border border-ivory-300 rounded-xl py-2.5 pl-10 pr-4 text-xs text-charcoal-900 focus:outline-none focus:ring-1 focus:ring-burgundy-900"
                     />
-                    <Mail className="w-4 h-4 text-charcoal-400 absolute left-3 top-2.5" />
+                    <Mail className="w-4 h-4 text-charcoal-400 absolute left-3 top-3" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-medium text-charcoal-600 mb-1">Password</label>
+                  <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1">
+                    Password
+                  </label>
                   <div className="relative">
                     <input
                       type="password"
                       value={custPassword}
                       onChange={(e) => setCustPassword(e.target.value)}
                       placeholder="••••••••"
-                      required
-                      className="w-full bg-ivory-50 border border-ivory-300 rounded-xl py-2 pl-9 pr-3 text-xs focus:ring-2 focus:ring-burgundy-800"
+                      className="w-full bg-white border border-ivory-300 rounded-xl py-2.5 pl-10 pr-4 text-xs text-charcoal-900 focus:outline-none focus:ring-1 focus:ring-burgundy-900"
                     />
-                    <Lock className="w-4 h-4 text-charcoal-400 absolute left-3 top-2.5" />
+                    <Lock className="w-4 h-4 text-charcoal-400 absolute left-3 top-3" />
                   </div>
                 </div>
 
+                {/* 10% Gold CTA Button */}
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-200 font-semibold text-xs tracking-wider uppercase transition shadow-md"
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-burgundy-950 font-serif font-bold text-xs tracking-wider shadow-md transition"
                 >
-                  {customerMode === 'signin' ? 'Sign In as Customer' : 'Complete Registration'}
+                  {customerMode === 'signin' ? 'Sign In as Shopper' : 'Create Boutique Account'}
                 </button>
               </form>
 
-              <div className="flex items-center justify-between text-[11px] text-charcoal-600 pt-1">
-                <span>
-                  {customerMode === 'signin' ? "Don't have an account?" : 'Already have an account?'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setCustomerMode(customerMode === 'signin' ? 'signup' : 'signin')}
-                  className="text-burgundy-900 font-bold hover:underline"
-                >
-                  {customerMode === 'signin' ? 'Create Account' : 'Sign In'}
-                </button>
+              {/* Toggle Signin / Signup */}
+              <div className="text-center text-xs text-charcoal-500 pt-1">
+                {customerMode === 'signin' ? (
+                  <span>
+                    New to Bombay Saree?{' '}
+                    <button
+                      onClick={() => setCustomerMode('signup')}
+                      className="font-bold text-burgundy-900 hover:underline"
+                    >
+                      Create an account
+                    </button>
+                  </span>
+                ) : (
+                  <span>
+                    Already registered?{' '}
+                    <button
+                      onClick={() => setCustomerMode('signin')}
+                      className="font-bold text-burgundy-900 hover:underline"
+                    >
+                      Sign In here
+                    </button>
+                  </span>
+                )}
               </div>
 
-              {/* Fast 1-Click Demo Shortcut */}
-              <div className="pt-2 border-t border-ivory-200">
+              {/* Discreet Staff & Partner Gateway Link */}
+              <div className="pt-4 border-t border-ivory-300 text-center">
                 <button
                   type="button"
-                  onClick={() => {
-                    loginAsCustomer();
-                    onClose();
-                  }}
-                  className="w-full py-2 px-3 rounded-lg bg-ivory-100 hover:bg-ivory-200 text-charcoal-700 text-xs font-medium flex items-center justify-between transition border border-ivory-300"
+                  onClick={() => setIsPartnerGateway(true)}
+                  className="text-[11px] text-charcoal-500 hover:text-burgundy-900 transition flex items-center justify-center gap-1 mx-auto font-medium"
                 >
-                  <span className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-gold-600" />
-                    <span>Quick Demo: Sign In as Ananya Singhania</span>
-                  </span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <KeyRound className="w-3.5 h-3.5 text-gold-600" />
+                  <span>Store Staff, Designer or Studio Admin? Enter Partner Gateway →</span>
                 </button>
               </div>
             </div>
           )}
 
           {/* ========================================================================= */}
-          {/* TAB 2: DESIGNER (APPLY / LOGIN) */}
+          {/* PARTNER GATEWAY: STAFF POS (PIN 4567) */}
           {/* ========================================================================= */}
-          {activeTab === 'designer' && (
+          {isPartnerGateway && partnerTab === 'staff' && (
             <div className="space-y-4">
-              <div className="flex bg-ivory-100 p-1 rounded-xl text-xs font-medium border border-ivory-200">
+              <div className="p-4 rounded-xl bg-ivory-100 border border-ivory-300 text-xs space-y-1">
+                <div className="flex items-center gap-2 font-serif font-bold text-burgundy-950">
+                  <Store className="w-4 h-4 text-gold-600" />
+                  <span>Kala Ghoda Studio Register #1</span>
+                </div>
+                <p className="text-charcoal-600 font-light">
+                  Enter your assigned Cashier Security PIN to launch the omnichannel POS billing terminal.
+                </p>
+                <div className="text-[11px] font-mono text-gold-800 pt-1 font-semibold">
+                  Demo Cashier PIN: <span className="underline">4567</span>
+                </div>
+              </div>
+
+              {staffError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                  <span>{staffError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleStaffLogin} className="space-y-3.5">
+                <div>
+                  <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                    4-Digit Cashier PIN
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={6}
+                    value={staffPin}
+                    onChange={(e) => setStaffPin(e.target.value)}
+                    placeholder="Enter PIN (4567)"
+                    className="w-full bg-white border border-ivory-300 rounded-xl py-3 px-4 text-center text-xl tracking-[0.4em] font-mono font-bold text-burgundy-950 focus:outline-none focus:ring-2 focus:ring-burgundy-900 shadow-sm"
+                  />
+                </div>
+
                 <button
-                  type="button"
-                  onClick={() => setDesignerAction('apply')}
-                  className={`flex-1 py-1.5 rounded-lg transition ${
-                    designerAction === 'apply'
-                      ? 'bg-burgundy-900 text-gold-200 shadow-sm font-bold'
-                      : 'text-charcoal-600 hover:text-charcoal-900'
-                  }`}
+                  type="submit"
+                  className="w-full py-3.5 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-300 font-serif font-bold text-xs tracking-wider shadow-md transition"
                 >
-                  Apply to Sell (New Designer)
+                  Unlock POS Terminal
                 </button>
+              </form>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* PARTNER GATEWAY: DESIGNER CONSIGNMENT */}
+          {/* ========================================================================= */}
+          {isPartnerGateway && partnerTab === 'designer' && (
+            <div className="space-y-4">
+              <div className="flex rounded-xl bg-ivory-200 p-1 text-xs">
                 <button
                   type="button"
                   onClick={() => setDesignerAction('login')}
-                  className={`flex-1 py-1.5 rounded-lg transition ${
+                  className={`flex-1 py-1.5 rounded-lg font-serif font-bold transition ${
                     designerAction === 'login'
-                      ? 'bg-burgundy-900 text-gold-200 shadow-sm font-bold'
+                      ? 'bg-white text-burgundy-950 shadow-sm'
                       : 'text-charcoal-600 hover:text-charcoal-900'
                   }`}
                 >
-                  Designer Partner Login
+                  Existing Partner Login
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDesignerAction('apply')}
+                  className={`flex-1 py-1.5 rounded-lg font-serif font-bold transition ${
+                    designerAction === 'apply'
+                      ? 'bg-white text-burgundy-950 shadow-sm'
+                      : 'text-charcoal-600 hover:text-charcoal-900'
+                  }`}
+                >
+                  Apply as New Designer
                 </button>
               </div>
 
-              {designerAction === 'apply' ? (
-                <form onSubmit={handleDesignerApply} className="space-y-3">
-                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
-                    <p>
-                      <strong>Admin Approval Required:</strong> Once you submit, your account will enter <em>Pending Review</em> status. The Bombay Saree Administrator reviews brand applications and sets your commission rate before saree publishing is unlocked.
-                    </p>
+              {designerAction === 'login' ? (
+                <form onSubmit={handleDesignerLogin} className="space-y-3.5">
+                  <div>
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                      Select Approved Atelier Brand:
+                    </label>
+                    <select
+                      value={selectedExistingDesigner}
+                      onChange={(e) => setSelectedExistingDesigner(e.target.value)}
+                      className="w-full bg-white border border-ivory-300 rounded-xl py-2.5 px-3 text-xs text-charcoal-900 font-serif font-semibold focus:outline-none focus:ring-1 focus:ring-burgundy-900"
+                    >
+                      {allDesigners.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.brand_name} ({d.city}) — {Math.round(d.default_commission_rate * 100)}% Consignment
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-300 font-serif font-bold text-xs tracking-wider shadow-md transition"
+                  >
+                    Open Designer Dashboard
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleDesignerApply} className="space-y-3 text-xs">
                   <div>
-                    <label className="block text-[11px] font-medium text-charcoal-600 mb-1">Brand / Atelier Name</label>
+                    <label className="font-mono text-[10px] uppercase text-charcoal-600 block mb-1">
+                      Brand / Studio Name *
+                    </label>
                     <input
                       type="text"
+                      required
                       value={brandName}
                       onChange={(e) => setBrandName(e.target.value)}
-                      placeholder="e.g. Chanderi Heritage Guild"
-                      required
-                      className="w-full bg-ivory-50 border border-ivory-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-burgundy-800"
+                      placeholder="e.g. Maya Banaras Loom"
+                      className="w-full bg-white border border-ivory-300 rounded-xl py-2 px-3 text-xs"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] font-medium text-charcoal-600 mb-1">Contact Person</label>
+                      <label className="font-mono text-[10px] uppercase text-charcoal-600 block mb-1">
+                        Contact Person
+                      </label>
                       <input
                         type="text"
                         value={contactPerson}
                         onChange={(e) => setContactPerson(e.target.value)}
-                        placeholder="Vikramaditya Rao"
-                        required
-                        className="w-full bg-ivory-50 border border-ivory-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-burgundy-800"
+                        placeholder="Lead Designer"
+                        className="w-full bg-white border border-ivory-300 rounded-xl py-2 px-3 text-xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium text-charcoal-600 mb-1">Phone Number</label>
-                      <input
-                        type="tel"
-                        value={designerPhone}
-                        onChange={(e) => setDesignerPhone(e.target.value)}
-                        placeholder="+91 98401 22890"
-                        required
-                        className="w-full bg-ivory-50 border border-ivory-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-burgundy-800"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-medium text-charcoal-600 mb-1">Business Email</label>
-                    <input
-                      type="email"
-                      value={designerEmail}
-                      onChange={(e) => setDesignerEmail(e.target.value)}
-                      placeholder="concierge@atelier.com"
-                      required
-                      className="w-full bg-ivory-50 border border-ivory-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-burgundy-800"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[11px] font-medium text-charcoal-600 mb-1">City</label>
+                      <label className="font-mono text-[10px] uppercase text-charcoal-600 block mb-1">
+                        Atelier City
+                      </label>
                       <input
                         type="text"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        className="w-full bg-ivory-50 border border-ivory-300 rounded-xl py-2 px-3 text-xs"
+                        placeholder="Varanasi / Jaipur"
+                        className="w-full bg-white border border-ivory-300 rounded-xl py-2 px-3 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="font-mono text-[10px] uppercase text-charcoal-600 block mb-1">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        value={designerEmail}
+                        onChange={(e) => setDesignerEmail(e.target.value)}
+                        placeholder="atelier@domain.com"
+                        className="w-full bg-white border border-ivory-300 rounded-xl py-2 px-3 text-xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium text-charcoal-600 mb-1">State</label>
+                      <label className="font-mono text-[10px] uppercase text-charcoal-600 block mb-1">
+                        Phone
+                      </label>
                       <input
-                        type="text"
-                        value={state}
-                        onChange={(e) => setState(e.target.value)}
-                        className="w-full bg-ivory-50 border border-ivory-300 rounded-xl py-2 px-3 text-xs"
+                        type="tel"
+                        value={designerPhone}
+                        onChange={(e) => setDesignerPhone(e.target.value)}
+                        placeholder="+91 98000 00000"
+                        className="w-full bg-white border border-ivory-300 rounded-xl py-2 px-3 text-xs"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-medium text-charcoal-600 mb-1">Brand Craft & Story</label>
+                    <label className="font-mono text-[10px] uppercase text-charcoal-600 block mb-1">
+                      Weaving Heritage & Brand Story
+                    </label>
                     <textarea
+                      rows={2}
                       value={brandStory}
                       onChange={(e) => setBrandStory(e.target.value)}
-                      placeholder="Describe your weaving craft, GI certification, natural dyes, or bridal aesthetics..."
-                      rows={2}
-                      className="w-full bg-ivory-50 border border-ivory-300 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-burgundy-800"
+                      placeholder="Specialization in hand-loomed kadwa zari..."
+                      className="w-full bg-white border border-ivory-300 rounded-xl py-2 px-3 text-xs"
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="w-full py-3 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-200 font-semibold text-xs tracking-wider uppercase transition shadow-md flex items-center justify-center gap-2"
-                  >
-                    <span>Submit Brand Application</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleDesignerLogin} className="space-y-4">
-                  <p className="text-xs text-charcoal-600">
-                    Select your registered designer atelier to manage live consignment stock, collection approvals, and payouts:
-                  </p>
-
-                  <div className="space-y-2">
-                    {allDesigners.map((d) => (
-                      <label
-                        key={d.id}
-                        className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
-                          selectedExistingDesigner === d.id
-                            ? 'bg-burgundy-50 border-burgundy-800 shadow-sm'
-                            : 'bg-ivory-50 border-ivory-300 hover:bg-ivory-100'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="radio"
-                            name="designerSelect"
-                            value={d.id}
-                            checked={selectedExistingDesigner === d.id}
-                            onChange={() => setSelectedExistingDesigner(d.id)}
-                            className="text-burgundy-900 focus:ring-burgundy-800"
-                          />
-                          <div>
-                            <span className="font-serif font-bold text-xs text-charcoal-900 block">
-                              {d.brand_name}
-                            </span>
-                            <span className="text-[10px] text-charcoal-500">
-                              {d.city}, {d.state} • {d.contact_person}
-                            </span>
-                          </div>
-                        </div>
-
-                        <span
-                          className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                            d.approval_status === 'approved'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-amber-100 text-amber-800'
-                          }`}
-                        >
-                          {d.approval_status}
-                        </span>
-                      </label>
-                    ))}
+                  <div className="p-2.5 rounded-lg bg-gold-50 border border-gold-300 text-[11px] text-gold-900 leading-relaxed font-light">
+                    * Applications enter a <strong>Pending Approval</strong> state until verified by Bombay Saree Executive Administration.
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-200 font-semibold text-xs tracking-wider uppercase transition shadow-md"
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-burgundy-950 font-serif font-bold text-xs shadow-md"
                   >
-                    Open Designer Portal
+                    Submit Consignment Application
                   </button>
                 </form>
               )}
@@ -537,118 +580,51 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
           )}
 
           {/* ========================================================================= */}
-          {/* TAB 3: STORE STAFF (POS BILLING) */}
+          {/* PARTNER GATEWAY: EXECUTIVE ADMIN */}
           {/* ========================================================================= */}
-          {activeTab === 'staff' && (
+          {isPartnerGateway && partnerTab === 'admin' && (
             <div className="space-y-4">
-              <div className="text-center space-y-1">
-                <div className="w-12 h-12 bg-amber-100 text-amber-800 rounded-2xl flex items-center justify-center mx-auto mb-2">
-                  <Store className="w-6 h-6" />
+              <div className="p-4 rounded-xl bg-ivory-100 border border-ivory-300 text-xs space-y-1">
+                <div className="flex items-center gap-2 font-serif font-bold text-burgundy-950">
+                  <ShieldCheck className="w-4 h-4 text-gold-600" />
+                  <span>Executive Omnichannel Studio Control</span>
                 </div>
-                <h4 className="font-serif text-lg font-bold text-charcoal-900">
-                  Store POS Billing Terminal
-                </h4>
-                <p className="text-xs text-charcoal-500">
-                  Dedicated interface for physical store cashiers and barcode billing.
+                <p className="text-charcoal-600 font-light">
+                  Full executive control over inventory barcodes, designer commissions & approval, POS audit logs, and studio reports.
                 </p>
-              </div>
-
-              <div className="p-3 bg-ivory-50 rounded-xl border border-ivory-200 text-xs space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-charcoal-500">Store Location:</span>
-                  <strong className="text-charcoal-900">Kala Ghoda Flagship Studio (Mumbai)</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-charcoal-500">Assigned Cashier:</span>
-                  <strong className="text-charcoal-900">Priya Sharma</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-charcoal-500">Hardware:</span>
-                  <span className="text-emerald-700 font-medium">Barcode Scanner & Thermal Printer Ready</span>
+                <div className="text-[11px] font-mono text-gold-800 pt-1 font-semibold">
+                  Demo Passcode: <span className="underline">admin123</span>
                 </div>
               </div>
 
-              <form onSubmit={handleStaffLogin} className="space-y-3">
+              {adminError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                  <span>{adminError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleAdminLogin} className="space-y-3.5">
                 <div>
-                  <label className="block text-[11px] font-medium text-charcoal-600 mb-1">
-                    Enter Cashier Security PIN (Default Demo: 4567)
+                  <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                    Master Administrator Passcode
                   </label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      maxLength={6}
-                      value={staffPin}
-                      onChange={(e) => setStaffPin(e.target.value)}
-                      placeholder="4567"
-                      required
-                      className="w-full bg-ivory-50 border border-ivory-300 rounded-xl py-2 pl-9 pr-3 text-xs tracking-widest text-center font-mono font-bold text-base focus:ring-2 focus:ring-burgundy-800"
-                    />
-                    <KeyRound className="w-4 h-4 text-charcoal-400 absolute left-3 top-2.5" />
-                  </div>
-                  {staffError && <p className="text-[11px] text-red-600 font-medium mt-1">{staffError}</p>}
+                  <input
+                    type="password"
+                    value={adminPasscode}
+                    onChange={(e) => setAdminPasscode(e.target.value)}
+                    placeholder="Enter admin passcode (admin123)"
+                    className="w-full bg-white border border-ivory-300 rounded-xl py-3 px-4 text-xs font-mono text-burgundy-950 focus:outline-none focus:ring-2 focus:ring-burgundy-900 shadow-sm"
+                  />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-200 font-semibold text-xs tracking-wider uppercase transition shadow-md"
+                  className="w-full py-3.5 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-300 font-serif font-bold text-xs tracking-wider shadow-md transition"
                 >
-                  Unlock POS Register & Shifts
+                  Enter Executive Studio
                 </button>
               </form>
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* TAB 4: ADMIN STUDIO */}
-          {/* ========================================================================= */}
-          {activeTab === 'admin' && (
-            <div className="space-y-4">
-              <div className="text-center space-y-1">
-                <div className="w-12 h-12 bg-burgundy-100 text-burgundy-900 rounded-2xl flex items-center justify-center mx-auto mb-2">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-                <h4 className="font-serif text-lg font-bold text-charcoal-900">
-                  Executive Admin Studio
-                </h4>
-                <p className="text-xs text-charcoal-500">
-                  Full control: omnichannel sales analytics, designer review & approvals, physical piece barcode generation, and payout engines.
-                </p>
-              </div>
-
-              <form onSubmit={handleAdminLogin} className="space-y-3">
-                <div>
-                  <label className="block text-[11px] font-medium text-charcoal-600 mb-1">Admin Passcode</label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      value={adminPasscode}
-                      onChange={(e) => setAdminPasscode(e.target.value)}
-                      placeholder="admin123"
-                      required
-                      className="w-full bg-ivory-50 border border-ivory-300 rounded-xl py-2 pl-9 pr-3 text-xs focus:ring-2 focus:ring-burgundy-800"
-                    />
-                    <Lock className="w-4 h-4 text-charcoal-400 absolute left-3 top-2.5" />
-                  </div>
-                  {adminError && <p className="text-[11px] text-red-600 font-medium mt-1">{adminError}</p>}
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-200 font-semibold text-xs tracking-wider uppercase transition shadow-md"
-                >
-                  Enter Executive Admin Studio
-                </button>
-              </form>
-
-              <div className="p-3 bg-ivory-100 rounded-xl border border-ivory-200 text-[11px] text-charcoal-600 space-y-1">
-                <strong className="text-charcoal-900 block font-serif">Admin Privileges:</strong>
-                <ul className="list-disc list-inside space-y-0.5 text-charcoal-600">
-                  <li>Approve pending designer applications with custom commission splits</li>
-                  <li>Real-time revenue split: Online Boutique vs POS Register</li>
-                  <li>Batch generate & print Code 128 piece barcodes</li>
-                  <li>Release consignment payout batches with 7-day dispute checks</li>
-                </ul>
-              </div>
             </div>
           )}
         </div>

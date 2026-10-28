@@ -7,10 +7,12 @@ import { CustomerHeader } from '../components/customer/CustomerHeader';
 import { HeroBanner } from '../components/customer/HeroBanner';
 import { ProductCard } from '../components/customer/ProductCard';
 import { ProductDetailModal } from '../components/customer/ProductDetailModal';
+import { BarcodeVerificationModal } from '../components/customer/BarcodeVerificationModal';
 import { CartDrawer } from '../components/customer/CartDrawer';
 import { CheckoutModal } from '../components/customer/CheckoutModal';
 import { OrderTrackingModal } from '../components/customer/OrderTrackingModal';
 import { InvoiceModal } from '../components/common/InvoiceModal';
+import { AuthModal } from '../components/auth/AuthModal';
 import {
   Sparkles,
   MapPin,
@@ -29,6 +31,8 @@ import {
   Compass,
   ArrowRight,
   Calendar,
+  Barcode,
+  KeyRound,
 } from 'lucide-react';
 
 export const CustomerMode: React.FC = () => {
@@ -37,10 +41,12 @@ export const CustomerMode: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedOccasion, setSelectedOccasion] = useState<string>('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState<boolean>(false);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState<boolean>(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState<boolean>(false);
+  const [showPartnerAuthModal, setShowPartnerAuthModal] = useState<boolean>(false);
   const [selectedInvoiceSale, setSelectedInvoiceSale] = useState<Sale | null>(null);
 
   // Filters & Sorting
@@ -126,6 +132,7 @@ export const CustomerMode: React.FC = () => {
         onOpenCart={() => setIsCartOpen(true)}
         onOpenWishlist={() => setIsWishlistOpen(true)}
         onOpenOrders={() => setIsOrdersOpen(true)}
+        onOpenBarcodeVerifier={() => setIsBarcodeModalOpen(true)}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         selectedCategory={selectedCategory}
@@ -460,7 +467,7 @@ export const CustomerMode: React.FC = () => {
 
       {/* Kala Ghoda Flagship Studio Story & Bespoke Draping Section */}
       <section className="bg-[#140407] text-ivory-50 border-t border-gold-600/30 py-16 sm:py-24 relative overflow-hidden">
-        {/* Subtle decorative background */}
+        {/* Decorative background */}
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#D4AF37_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -618,6 +625,13 @@ export const CustomerMode: React.FC = () => {
         onWishlistChange={() => setWishlistVersion((v) => v + 1)}
       />
 
+      {/* Barcode Drape & Provenance Verification Modal */}
+      <BarcodeVerificationModal
+        isOpen={isBarcodeModalOpen}
+        onClose={() => setIsBarcodeModalOpen(false)}
+        onSelectProduct={(p) => setSelectedProduct(p)}
+      />
+
       {/* Cart Drawer Slide-out */}
       <CartDrawer
         isOpen={isCartOpen}
@@ -645,6 +659,13 @@ export const CustomerMode: React.FC = () => {
       <InvoiceModal
         sale={selectedInvoiceSale}
         onClose={() => setSelectedInvoiceSale(null)}
+      />
+
+      {/* Dedicated Partner & Staff Gateway Modal (From Footer) */}
+      <AuthModal
+        isOpen={showPartnerAuthModal}
+        onClose={() => setShowPartnerAuthModal(false)}
+        initialTab="staff"
       />
 
       {/* Studio Luxury Footer */}
@@ -768,7 +789,18 @@ export const CustomerMode: React.FC = () => {
 
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-charcoal-500 text-[11px] gap-2 font-mono">
             <p>© 2026 Bombay Saree Retail Private Limited. All rights reserved.</p>
-            <p>GSTIN: 27AABCB9821M1ZX | HSN 5007 Pure Silk Sarees</p>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowPartnerAuthModal(true)}
+                className="hover:text-gold-400 text-charcoal-500 transition text-[10px] tracking-wider uppercase font-sans flex items-center gap-1"
+              >
+                <KeyRound className="w-3 h-3 text-gold-600" />
+                <span>Staff & Partner Portal</span>
+              </button>
+              <span className="text-charcoal-700">•</span>
+              <p>GSTIN: 27AABCB9821M1ZX | HSN 5007 Pure Silk Sarees</p>
+            </div>
           </div>
         </div>
       </footer>
