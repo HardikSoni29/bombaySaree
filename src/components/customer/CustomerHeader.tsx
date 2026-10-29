@@ -91,7 +91,7 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
                 BOMBAY SAREE
               </span>
               <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.3em] text-gold-700 font-serif mt-1 font-semibold">
-                Studio & Designer Marketplace
+                Flagship Handloom Studio • Kala Ghoda
               </span>
             </div>
 
@@ -102,7 +102,7 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search silk, zari, Kanjivaram, designer..."
+                  placeholder="Search pure silk, zari, Kanjivaram, Kadwa..."
                   className="w-full bg-white border border-ivory-300 rounded-full py-2 pl-10 pr-4 text-xs font-serif text-charcoal-900 placeholder-charcoal-400 focus:outline-none focus:ring-1 focus:ring-burgundy-900 focus:border-burgundy-900 transition shadow-2xs"
                 />
                 <Search className="w-4 h-4 text-charcoal-400 absolute left-3.5 top-2.5" />
@@ -227,22 +227,7 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
                           </button>
                         </div>
 
-                        {/* Special Role Portals ONLY visible if already logged into that role or admin */}
-                        {(user.role === 'designer' || user.role === 'admin') && (
-                          <div className="py-1 border-t border-ivory-200">
-                            <button
-                              onClick={() => {
-                                setShowUserMenu(false);
-                                setRole('designer');
-                              }}
-                              className="w-full px-4 py-2 text-left hover:bg-ivory-100 flex items-center gap-2 text-burgundy-900 font-semibold"
-                            >
-                              <Palette className="w-4 h-4 text-gold-600" />
-                              <span>Go to Designer Portal</span>
-                            </button>
-                          </div>
-                        )}
-
+                        {/* Staff & Admin Direct Switcher */}
                         {(user.role === 'staff' || user.role === 'admin') && (
                           <div className="py-1 border-t border-ivory-200">
                             <button

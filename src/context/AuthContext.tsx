@@ -71,17 +71,25 @@ export const defaultMockProfiles: Record<AppRole, UserProfile> = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Always default to customer mode for any visitor
+  // Always default to customer mode for any visitor, clean up stale designer role
   const [currentRole, setCurrentRole] = useState<AppRole>(() => {
     const saved = localStorage.getItem('bombay_active_role') as AppRole;
-    return saved || 'customer';
+    if (!saved || saved === 'designer' || (saved !== 'customer' && saved !== 'staff' && saved !== 'admin')) {
+      localStorage.setItem('bombay_active_role', 'customer');
+      return 'customer';
+    }
+    return saved;
   });
 
   const [user, setUser] = useState<UserProfile>(() => {
     const saved = localStorage.getItem('bombay_user_profile');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed.role === 'designer') {
+          return defaultGuestUser;
+        }
+        return parsed;
       } catch {}
     }
     const role = (localStorage.getItem('bombay_active_role') as AppRole) || 'customer';

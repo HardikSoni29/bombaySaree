@@ -39,9 +39,13 @@ const AppContent: React.FC = () => {
 
       {/* Role-Based Mode Router: Customer Boutique, Staff POS, Admin Console */}
       <div className="flex-1">
-        {currentRole === 'customer' && <CustomerMode />}
-        {currentRole === 'staff' && <StaffPosMode />}
-        {currentRole === 'admin' && <AdminMode />}
+        {currentRole === 'staff' ? (
+          <StaffPosMode />
+        ) : currentRole === 'admin' ? (
+          <AdminMode />
+        ) : (
+          <CustomerMode />
+        )}
       </div>
     </div>
   );
