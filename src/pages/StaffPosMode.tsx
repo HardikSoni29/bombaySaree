@@ -384,7 +384,7 @@ export const StaffPosMode: React.FC = () => {
                     <div className="flex items-center gap-2 text-[10px] text-charcoal-500 font-mono mt-0.5">
                       <span>Tag: <strong className="text-burgundy-900">{item.inventoryItem.barcode}</strong></span>
                       <span>•</span>
-                      <span className="text-charcoal-600">{item.inventoryItem.ownership_type === 'designer_consignment' ? 'Consignment' : 'Studio Owned'}</span>
+                      <span className="text-charcoal-600">Bombay Saree Studio Piece</span>
                     </div>
 
                     <div className="flex items-center gap-2 mt-2">

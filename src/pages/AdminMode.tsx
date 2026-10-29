@@ -3,818 +3,730 @@ import { BombayDataStore } from '../lib/storage';
 import {
   Product,
   InventoryItem,
-  DesignerProfile,
   Sale,
-  SaleAllocation,
-  Payout,
   StoreLocation,
-  StockCondition,
-  OwnershipType,
 } from '../types/database';
 import { formatINR, formatDate, formatDateTime, generateBarcodeString } from '../lib/utils';
 import { BarcodeModal } from '../components/common/BarcodeModal';
 import { InvoiceModal } from '../components/common/InvoiceModal';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
+import { ThermalReceiptModal } from '../components/common/ThermalReceiptModal';
+import { useAuth } from '../context/AuthContext';
 import {
   ShieldCheck,
   TrendingUp,
   Package,
   Store,
   ShoppingBag,
-  Users,
-  CheckCircle2,
-  XCircle,
   Barcode,
-  ArrowRightLeft,
-  DollarSign,
-  Download,
-  AlertTriangle,
   Plus,
   Search,
   Eye,
   Tag,
-  Settings,
+  CheckCircle2,
+  AlertCircle,
+  Printer,
+  Sparkles,
+  ArrowRight,
   Layers,
-  FileSpreadsheet,
+  FileText,
+  DollarSign,
+  MapPin,
   Check,
-  X,
-  CreditCard,
 } from 'lucide-react';
 
 export const AdminMode: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'designers' | 'catalog' | 'inventory' | 'orders' | 'payouts' | 'reports' | 'settings'
-  >('overview');
+  const { setRole } = useAuth();
+  const [activeTab, setActiveTab] = useState<'upload' | 'inventory' | 'catalog' | 'orders' | 'analytics'>('upload');
 
   // Modals & Inspection states
   const [selectedBarcodeItem, setSelectedBarcodeItem] = useState<InventoryItem | null>(null);
   const [selectedInvoiceSale, setSelectedInvoiceSale] = useState<Sale | null>(null);
-  const [showReceiveModal, setShowReceiveModal] = useState<boolean>(false);
-  const [showTransferModal, setShowTransferModal] = useState<boolean>(false);
-  const [transferTargetItem, setTransferTargetItem] = useState<InventoryItem | null>(null);
-  const [transferTargetLocation, setTransferTargetLocation] = useState<string>('loc-mum-01');
+  const [selectedThermalSale, setSelectedThermalSale] = useState<Sale | null>(null);
 
-  // Receive stock form state
-  const [receiveProductId, setReceiveProductId] = useState<string>('');
-  const [receiveLocationId, setReceiveLocationId] = useState<string>('loc-mum-01');
-  const [receiveBarcodes, setReceiveBarcodes] = useState<string>('');
-  const [receiveCost, setReceiveCost] = useState<number>(15000);
+  // New Saree Upload Form State
+  const [name, setName] = useState('');
+  const [fabric, setFabric] = useState('Pure Mulberry Kanjivaram Silk');
+  const [color, setColor] = useState('Royal Crimson & Gold');
+  const [occasion, setOccasion] = useState('Bridal & Wedding');
+  const [categoryId, setCategoryId] = useState('cat-kanjivaram');
+  const [price, setPrice] = useState<number>(45000);
+  const [mrp, setMrp] = useState<number>(55000);
+  const [imageUrl, setImageUrl] = useState('https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=85');
+  const [drapeLength, setDrapeLength] = useState('5.5 Meters');
+  const [blouseIncluded, setBlouseIncluded] = useState(true);
+  const [blouseLength, setBlouseLength] = useState('0.8 Meters (Unstitched)');
+  const [description, setDescription] = useState('Woven on traditional Korvai pit looms with certified 24K pure gold electroplated zari.');
+  const [careInstructions, setCareInstructions] = useState('Dry clean only. Store wrapped in pure unbleached mul-mul cotton cloth.');
+  const [bestseller, setBestseller] = useState(false);
+  const [stockQuantity, setStockQuantity] = useState<number>(2);
 
-  // Search & Filters
-  const [inventorySearch, setInventorySearch] = useState<string>('');
-  const [catalogSearch, setCatalogSearch] = useState<string>('');
+  // Add more pieces to existing product modal
+  const [quickAddProductId, setQuickAddProductId] = useState<string | null>(null);
+  const [quickAddCount, setQuickAddCount] = useState<number>(2);
+
+  const [uploadSuccessMsg, setUploadSuccessMsg] = useState<string | null>(null);
+  const [inventorySearch, setInventorySearch] = useState('');
+  const [catalogSearch, setCatalogSearch] = useState('');
+  const [salesSearch, setSalesSearch] = useState('');
 
   // Live data from data store
-  const locations = BombayDataStore.getLocations();
-  const designers = BombayDataStore.getDesigners();
   const products = BombayDataStore.getProducts();
   const inventory = BombayDataStore.getInventoryItems();
   const sales = BombayDataStore.getSales();
-  const allocations = BombayDataStore.getAllocations();
-  const payouts = BombayDataStore.getPayouts();
-  const movements = BombayDataStore.getInventoryMovements();
-  const auditLogs = BombayDataStore.getAuditLogs();
 
-  // Metrics Calculations
+  // Metrics
   const totalRevenue = sales.reduce((sum, s) => sum + s.total_payable, 0);
-  const onlineSalesRevenue = sales.filter((s) => s.channel === 'online').reduce((sum, s) => sum + s.total_payable, 0);
-  const posSalesRevenue = sales.filter((s) => s.channel === 'pos').reduce((sum, s) => sum + s.total_payable, 0);
+  const posRevenue = sales.filter((s) => s.channel === 'pos').reduce((sum, s) => sum + s.total_payable, 0);
+  const onlineRevenue = sales.filter((s) => s.channel === 'online').reduce((sum, s) => sum + s.total_payable, 0);
+  const availableInventory = inventory.filter((i) => i.status === 'available');
+  const totalValuation = availableInventory.reduce((sum, i) => sum + (i.product?.price || 0), 0);
 
-  const totalSareesInStock = inventory.filter((i) => i.status === 'available').length;
-  const consignmentStockCount = inventory.filter((i) => i.ownership_type === 'designer_consignment' && i.status === 'available').length;
-  const bombayOwnedStockCount = inventory.filter((i) => i.ownership_type === 'bombay_owned' && i.status === 'available').length;
-
-  const inventoryValuation = inventory
-    .filter((i) => i.status === 'available')
-    .reduce((sum, i) => sum + (i.product?.price || 0), 0);
-
-  const pendingDesignerApplications = designers.filter((d) => d.approval_status === 'pending');
-  const pendingProductSubmissions = products.filter((p) => p.status === 'pending');
-  const eligiblePayoutLiabilities = allocations
-    .filter((a) => a.status === 'eligible')
-    .reduce((sum, a) => sum + a.designer_amount, 0);
-
-  // Chart data: Channel Breakdown
-  const channelChartData = [
-    { name: 'Kala Ghoda POS', revenue: posSalesRevenue },
-    { name: 'Online Boutique', revenue: onlineSalesRevenue },
+  // Preset Silk Image Options for Quick Selection
+  const imagePresets = [
+    {
+      label: 'Kanjivaram Crimson Gold',
+      url: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=85',
+      fabric: 'Pure Mulberry Kanjivaram Silk',
+      color: 'Royal Crimson & Gold',
+      cat: 'cat-kanjivaram',
+    },
+    {
+      label: 'Banarasi Midnight Navy',
+      url: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=85',
+      fabric: 'Pure Katan Silk Banarasi Kadwa',
+      color: 'Midnight Navy & Silver Zari',
+      cat: 'cat-banarasi',
+    },
+    {
+      label: 'Chanderi Champagne Tissue',
+      url: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=85',
+      fabric: 'Handwoven Chanderi Metallic Tissue',
+      color: 'Champagne Gold & Pearl',
+      cat: 'cat-chanderi',
+    },
+    {
+      label: 'Yeola Paithani Peacock',
+      url: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=85',
+      fabric: 'Pure Mulberry Silk Paithani',
+      color: 'Emerald Green & Rich Ruby',
+      cat: 'cat-paithani',
+    },
   ];
 
-  // Stock Distribution Chart Data
-  const stockPieData = [
-    { name: 'Designer Consignment', value: consignmentStockCount, color: '#800020' },
-    { name: 'Bombay Owned Studio', value: bombayOwnedStockCount, color: '#D4AF37' },
-  ];
-
-  // Stock Receiving Handler
-  const handleReceiveStock = (e: React.FormEvent) => {
+  // Handle Upload Stock
+  const handleUploadSaree = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!receiveProductId) {
-      alert('Please select a saree design');
+    if (!name.trim()) {
+      alert('Please enter a Saree Design Name');
       return;
     }
 
-    const prod = products.find((p) => p.id === receiveProductId);
+    try {
+      // 1. Generate unique SKU
+      const skuPrefix = `BS-${name.substring(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+
+      // 2. Add product to catalog
+      const newProduct = BombayDataStore.saveProduct({
+        name,
+        sku: skuPrefix,
+        category_id: categoryId,
+        fabric,
+        color,
+        occasion,
+        price,
+        mrp,
+        drape_length: drapeLength,
+        blouse_included: blouseIncluded,
+        blouse_length: blouseLength,
+        care_instructions: careInstructions,
+        description,
+        bestseller,
+        status: 'active',
+        images: [imageUrl],
+        ownership_type: 'bombay_owned',
+      });
+
+      // 3. Generate physical stock items with barcodes
+      const count = Math.max(1, stockQuantity);
+      const generatedBarcodes: string[] = [];
+
+      for (let i = 0; i < count; i++) {
+        generatedBarcodes.push(generateBarcodeString(`BS-${name.substring(0, 3).toUpperCase()}`));
+      }
+
+      BombayDataStore.receiveInventory(
+        newProduct.id,
+        'loc-mum-01',
+        generatedBarcodes,
+        'bombay_owned',
+        undefined,
+        Math.round(price * 0.55)
+      );
+
+      setUploadSuccessMsg(
+        `Successfully uploaded "${name}" with ${count} certified barcode tags: ${generatedBarcodes.join(', ')}`
+      );
+
+      // Reset form
+      setName('');
+      setPrice(45000);
+      setMrp(55000);
+      setStockQuantity(2);
+    } catch (err: any) {
+      alert(err.message || 'Error uploading saree design');
+    }
+  };
+
+  // Handle Quick Add Pieces
+  const handleAddPiecesToProduct = (productId: string) => {
+    const prod = products.find((p) => p.id === productId);
     if (!prod) return;
 
-    let barcodeList: string[] = [];
-    if (receiveBarcodes.trim()) {
-      barcodeList = receiveBarcodes
-        .split('\n')
-        .map((b) => b.trim().toUpperCase())
-        .filter((b) => b.length > 0);
-    } else {
-      // Auto-generate 2 unique barcodes if empty
-      barcodeList = [
-        generateBarcodeString(prod.sku.substring(0, 6)),
-        generateBarcodeString(prod.sku.substring(0, 6)),
-      ];
+    const barcodes: string[] = [];
+    for (let i = 0; i < quickAddCount; i++) {
+      barcodes.push(generateBarcodeString(`BS-${prod.name.substring(0, 3).toUpperCase()}`));
     }
 
-    try {
-      BombayDataStore.receiveInventory(
-        receiveProductId,
-        receiveLocationId,
-        barcodeList,
-        prod.ownership_type,
-        prod.designer_id,
-        receiveCost,
-        'admin'
-      );
+    BombayDataStore.receiveInventory(
+      prod.id,
+      'loc-mum-01',
+      barcodes,
+      'bombay_owned',
+      undefined,
+      Math.round(prod.price * 0.55)
+    );
 
-      setShowReceiveModal(false);
-      setReceiveBarcodes('');
-      alert(`Successfully received ${barcodeList.length} physical saree pieces with unique barcodes!`);
-    } catch (err: any) {
-      alert(err.message || 'Error receiving stock');
-    }
+    setQuickAddProductId(null);
+    alert(`Added ${quickAddCount} physical barcode pieces to ${prod.name}!`);
   };
 
-  const handleTransferStock = () => {
-    if (!transferTargetItem) return;
-    try {
-      BombayDataStore.transferInventory(transferTargetItem.id, transferTargetLocation, 'admin');
-      setShowTransferModal(false);
-      setTransferTargetItem(null);
-      alert(`Piece ${transferTargetItem.barcode} transferred to selected location.`);
-    } catch (err: any) {
-      alert(err.message || 'Transfer failed');
-    }
-  };
+  // Filtered Inventory
+  const filteredInventory = inventory.filter((item) => {
+    const q = inventorySearch.toLowerCase();
+    return (
+      item.barcode.toLowerCase().includes(q) ||
+      (item.product?.name || '').toLowerCase().includes(q) ||
+      (item.product?.fabric || '').toLowerCase().includes(q)
+    );
+  });
 
-  const handleCreatePayoutBatch = (designerId: string) => {
-    const designerAllocs = allocations.filter((a) => a.designer_id === designerId && a.status === 'eligible');
-    if (designerAllocs.length === 0) {
-      alert('No eligible allocations found for this designer.');
-      return;
-    }
+  // Filtered Catalog
+  const filteredProducts = products.filter((p) => {
+    const q = catalogSearch.toLowerCase();
+    return (
+      p.name.toLowerCase().includes(q) ||
+      p.fabric.toLowerCase().includes(q) ||
+      p.sku.toLowerCase().includes(q)
+    );
+  });
 
-    try {
-      const payout = BombayDataStore.createPayoutBatch(
-        designerId,
-        designerAllocs.map((a) => a.id),
-        'admin'
-      );
-      alert(`Created Payout Batch ${payout.payout_number} for ${formatINR(payout.amount)}!`);
-    } catch (err: any) {
-      alert(err.message || 'Error creating payout batch');
-    }
-  };
-
-  const handleSettlePayout = (payoutId: string) => {
-    if (window.confirm('Confirm direct bank NEFT/RTGS settlement confirmation?')) {
-      BombayDataStore.recordPayoutResult(payoutId, 'paid');
-      alert('Payout settled! Designer ledger debit recorded.');
-    }
-  };
-
-  // CSV Report Exports
-  const exportCsv = (filename: string, rows: string[][]) => {
-    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map((e) => e.join(',')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const exportSalesCsv = () => {
-    const headers = ['Sale Number', 'Channel', 'Customer', 'Date', 'Subtotal', 'Tax', 'Total Payable', 'Status'];
-    const rows = sales.map((s) => [
-      s.sale_number,
-      s.channel,
-      `"${s.customer_name || 'Walk-in'}"`,
-      s.created_at,
-      s.subtotal_ex_tax.toString(),
-      s.tax_total.toString(),
-      s.total_payable.toString(),
-      s.status,
-    ]);
-    exportCsv(`bombay_saree_sales_${Date.now()}.csv`, [headers, ...rows]);
-  };
-
-  const exportInventoryCsv = () => {
-    const headers = ['Barcode', 'Saree Name', 'SKU', 'Ownership', 'Designer', 'Location', 'Price', 'Condition', 'Status'];
-    const rows = inventory.map((i) => [
-      i.barcode,
-      `"${i.product?.name || ''}"`,
-      i.product?.sku || '',
-      i.ownership_type,
-      `"${i.designer?.brand_name || 'Bombay Studio'}"`,
-      `"${i.location?.name || ''}"`,
-      (i.product?.price || 0).toString(),
-      i.condition,
-      i.status,
-    ]);
-    exportCsv(`bombay_saree_inventory_${Date.now()}.csv`, [headers, ...rows]);
-  };
+  // Filtered Sales
+  const filteredSales = sales.filter((s) => {
+    const q = salesSearch.toLowerCase();
+    return (
+      (s.sale_number || '').toLowerCase().includes(q) ||
+      (s.customer_name || '').toLowerCase().includes(q) ||
+      (s.customer_phone || '').toLowerCase().includes(q)
+    );
+  });
 
   return (
-    <div className="min-h-screen bg-ivory-50 text-charcoal-900 pb-20 font-sans">
-      {/* Admin Executive Header */}
-      <div className="bg-charcoal-950 text-ivory-50 border-b border-gold-600/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-[#FAF8F5] text-charcoal-900 font-sans flex flex-col">
+      {/* Admin Executive Header: 30% Royal Burgundy */}
+      <header className="bg-gradient-to-r from-burgundy-950 via-burgundy-900 to-burgundy-950 text-white border-b border-gold-600/40 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-gold-500/20 text-gold-300 border border-gold-400/40 shadow-md">
                 <ShieldCheck className="w-6 h-6 text-gold-400" />
-                <h1 className="font-brand text-2xl font-bold tracking-widest text-ivory-100 uppercase">
-                  BOMBAY SAREE ADMIN STUDIO
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-burgundy-900 text-gold-300 border border-gold-500/40 uppercase">
-                  Executive Command
-                </span>
               </div>
-              <p className="text-xs text-charcoal-400 mt-1">
-                Centralized omnichannel control: physical stores, barcode engine, designer approvals, inventory & settlements.
-              </p>
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-gold-400 font-bold block">
+                  Studio Administration Console
+                </span>
+                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ivory-50 leading-tight">
+                  Bombay Saree Heritage Management
+                </h1>
+              </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="flex items-center gap-2">
+            {/* Quick Action: Open Store POS Terminal */}
+            <div className="flex items-center gap-3">
               <button
-                onClick={() => setShowReceiveModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-burgundy-900 hover:bg-burgundy-950 text-gold-300 text-xs font-semibold shadow-sm transition border border-gold-500/30"
+                onClick={() => setRole('staff')}
+                className="btn-3d-gold flex items-center gap-2 px-5 py-2.5 rounded-xl font-serif text-xs font-bold tracking-wider"
               >
-                <Plus className="w-4 h-4" />
-                <span>Receive Physical Sarees</span>
+                <Store className="w-4 h-4" />
+                <span>Open Store POS Register</span>
+              </button>
+
+              <button
+                onClick={() => setRole('customer')}
+                className="btn-3d-burgundy flex items-center gap-2 px-4 py-2.5 rounded-xl font-serif text-xs font-bold tracking-wider border border-gold-500/30"
+              >
+                <ShoppingBag className="w-4 h-4 text-gold-400" />
+                <span>View Boutique</span>
               </button>
             </div>
           </div>
 
-          {/* Navigation Bar */}
-          <div className="flex gap-4 sm:gap-6 mt-6 border-t border-charcoal-800 pt-3 text-xs font-medium overflow-x-auto no-scrollbar">
-            {[
-              { id: 'overview', label: 'Executive Dashboard' },
-              { id: 'designers', label: `Designers (${designers.length})` },
-              { id: 'catalog', label: `Catalog (${products.length})` },
-              { id: 'inventory', label: `Inventory & Barcodes (${inventory.length})` },
-              { id: 'orders', label: `Omnichannel Sales (${sales.length})` },
-              { id: 'payouts', label: `Designer Settlements (${allocations.length})` },
-              { id: 'reports', label: 'Reports & CSV' },
-              { id: 'settings', label: 'Settings & Tax' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`whitespace-nowrap pb-2 border-b-2 transition ${
-                  activeTab === tab.id
-                    ? 'border-gold-400 text-gold-300 font-bold'
-                    : 'border-transparent text-charcoal-400 hover:text-ivory-200'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          {/* Quick Metrics Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-gold-600/20">
+            <div className="bg-charcoal-950/50 p-3 rounded-xl border border-gold-500/20">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-gold-300 block">Total Revenue</span>
+              <span className="font-serif text-xl font-bold text-white mt-0.5 block">{formatINR(totalRevenue)}</span>
+            </div>
+            <div className="bg-charcoal-950/50 p-3 rounded-xl border border-gold-500/20">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-gold-300 block">Available Drapes</span>
+              <span className="font-serif text-xl font-bold text-white mt-0.5 block">{availableInventory.length} Pieces</span>
+            </div>
+            <div className="bg-charcoal-950/50 p-3 rounded-xl border border-gold-500/20">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-gold-300 block">Vault Valuation</span>
+              <span className="font-serif text-xl font-bold text-white mt-0.5 block">{formatINR(totalValuation)}</span>
+            </div>
+            <div className="bg-charcoal-950/50 p-3 rounded-xl border border-gold-500/20">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-gold-300 block">Completed Sales</span>
+              <span className="font-serif text-xl font-bold text-white mt-0.5 block">{sales.length} Orders</span>
+            </div>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="flex gap-2 mt-6 overflow-x-auto pb-1 text-xs font-serif font-bold tracking-wide">
+            <button
+              onClick={() => setActiveTab('upload')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition ${
+                activeTab === 'upload'
+                  ? 'bg-gold-500 text-burgundy-950 shadow-md font-bold'
+                  : 'text-ivory-200 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Upload Saree Stock</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('inventory')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition ${
+                activeTab === 'inventory'
+                  ? 'bg-gold-500 text-burgundy-950 shadow-md font-bold'
+                  : 'text-ivory-200 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Barcode className="w-4 h-4" />
+              <span>Physical Barcode Vault ({inventory.length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('catalog')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition ${
+                activeTab === 'catalog'
+                  ? 'bg-gold-500 text-burgundy-950 shadow-md font-bold'
+                  : 'text-ivory-200 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span>Saree Designs Catalog ({products.length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('orders')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition ${
+                activeTab === 'orders'
+                  ? 'bg-gold-500 text-burgundy-950 shadow-md font-bold'
+                  : 'text-ivory-200 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>POS & Boutique Orders ({sales.length})</span>
+            </button>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Main Workspace Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        {/* Tab 1: Executive Overview */}
-        {activeTab === 'overview' && (
-          <div className="space-y-8">
-            {/* KPI Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-5 rounded-2xl border border-ivory-300 shadow-sm">
-                <span className="text-xs uppercase font-semibold text-charcoal-500 block">Total Omnichannel Revenue</span>
-                <span className="font-serif text-2xl font-bold text-burgundy-950 mt-1 block">
-                  {formatINR(totalRevenue)}
-                </span>
-                <div className="flex items-center justify-between text-[11px] text-charcoal-500 mt-2 pt-2 border-t border-ivory-200">
-                  <span>POS: {formatINR(posSalesRevenue)}</span>
-                  <span>Online: {formatINR(onlineSalesRevenue)}</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-5 rounded-2xl border border-ivory-300 shadow-sm">
-                <span className="text-xs uppercase font-semibold text-charcoal-500 block">Stock Valuation (Retail)</span>
-                <span className="font-serif text-2xl font-bold text-charcoal-900 mt-1 block">
-                  {formatINR(inventoryValuation)}
-                </span>
-                <div className="flex items-center justify-between text-[11px] text-charcoal-500 mt-2 pt-2 border-t border-ivory-200">
-                  <span>{totalSareesInStock} Total Pieces</span>
-                  <span className="text-burgundy-900 font-semibold">{consignmentStockCount} Consignment</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-5 rounded-2xl border border-ivory-300 shadow-sm">
-                <span className="text-xs uppercase font-semibold text-charcoal-500 block">Pending Payout Liability</span>
-                <span className="font-serif text-2xl font-bold text-gold-700 mt-1 block">
-                  {formatINR(eligiblePayoutLiabilities)}
-                </span>
-                <span className="text-[11px] text-charcoal-500 mt-2 pt-2 border-t border-ivory-200 block">
-                  Cleared 7-day return window
-                </span>
-              </div>
-
-              <div className="bg-white p-5 rounded-2xl border border-ivory-300 shadow-sm">
-                <span className="text-xs uppercase font-semibold text-charcoal-500 block">Pending Approvals</span>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <span className="font-serif text-2xl font-bold text-charcoal-900">
-                    {pendingDesignerApplications.length + pendingProductSubmissions.length}
-                  </span>
-                  <span className="text-xs text-amber-700 font-medium">Actions Required</span>
-                </div>
-                <div className="flex items-center justify-between text-[11px] text-charcoal-500 mt-2 pt-2 border-t border-ivory-200">
-                  <span>{pendingDesignerApplications.length} Designers</span>
-                  <span>{pendingProductSubmissions.length} Products</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Channel Sales Bar Chart */}
-              <div className="lg:col-span-8 bg-white p-6 rounded-2xl border border-ivory-300 shadow-sm">
-                <h3 className="font-serif text-base font-bold text-charcoal-900 mb-4">
-                  Sales Revenue by Channel (POS vs Online)
-                </h3>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={channelChartData}>
-                      <XAxis dataKey="name" stroke="#6D6D6D" fontSize={12} />
-                      <YAxis stroke="#6D6D6D" fontSize={11} tickFormatter={(val) => `₹${val / 1000}k`} />
-                      <Tooltip formatter={(val: any) => [formatINR(val), 'Revenue']} />
-                      <Bar dataKey="revenue" fill="#800020" radius={[6, 6, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Inventory Ownership Pie Chart */}
-              <div className="lg:col-span-4 bg-white p-6 rounded-2xl border border-ivory-300 shadow-sm flex flex-col justify-between">
-                <div>
-                  <h3 className="font-serif text-base font-bold text-charcoal-900 mb-1">
-                    Stock Ownership Breakdown
-                  </h3>
-                  <p className="text-xs text-charcoal-500">Consignment vs Bombay Owned Pieces</p>
-                </div>
-
-                <div className="h-48 my-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={stockPieData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={70}
-                        innerRadius={40}
-                      >
-                        {stockPieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <div className="space-y-1.5 text-xs pt-3 border-t border-ivory-200">
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center gap-1.5 text-burgundy-900 font-semibold">
-                      <span className="w-2.5 h-2.5 rounded-full bg-burgundy-800"></span> Consignment:
-                    </span>
-                    <span className="font-mono font-bold">{consignmentStockCount} pcs</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center gap-1.5 text-gold-700 font-semibold">
-                      <span className="w-2.5 h-2.5 rounded-full bg-gold-500"></span> Studio Owned:
-                    </span>
-                    <span className="font-mono font-bold">{bombayOwnedStockCount} pcs</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Audit Trail Snapshot */}
-            <div className="bg-white rounded-2xl border border-ivory-300 p-6 shadow-sm">
-              <h3 className="font-serif text-base font-bold text-charcoal-900 mb-3">
-                Live System Audit Ledger (Immutable)
-              </h3>
-              <div className="divide-y divide-ivory-200 max-h-56 overflow-y-auto text-xs">
-                {auditLogs.slice(0, 8).map((log) => (
-                  <div key={log.id} className="py-2.5 flex items-center justify-between">
-                    <div>
-                      <span className="font-semibold text-charcoal-800 uppercase text-[10px] bg-ivory-100 px-2 py-0.5 rounded mr-2">
-                        {log.action}
-                      </span>
-                      <span className="text-charcoal-600">{log.entity_type} ID: {log.entity_id}</span>
-                    </div>
-                    <span className="text-charcoal-400 font-mono text-[10px]">{formatDateTime(log.created_at)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 2: Designer Onboarding & Management */}
-        {activeTab === 'designers' && (
+      {/* Main Content Area: 60% Ivory Canvas */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1">
+        {/* ========================================================================= */}
+        {/* TAB 1: UPLOAD NEW SAREE STOCK */}
+        {/* ========================================================================= */}
+        {activeTab === 'upload' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-ivory-300">
               <div>
-                <h3 className="font-serif text-lg font-bold text-charcoal-900">
-                  Designer Applications & Partner Ateliers ({designers.length})
-                </h3>
-                <p className="text-xs text-charcoal-500">
-                  Review brand applications, configure commission agreements, and track payouts.
-                </p>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-gold-700 font-bold block">
+                  Inventory Onboarding
+                </span>
+                <h2 className="font-serif text-2xl font-bold text-burgundy-950">
+                  Upload Saree Design & Issue Barcodes
+                </h2>
               </div>
+              <span className="text-xs text-charcoal-500 font-light">
+                Each uploaded unit automatically receives a unique Code 128 barcode tag.
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {designers.map((d) => (
-                <div key={d.id} className="bg-white rounded-2xl border border-ivory-300 p-5 shadow-sm space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={d.logo_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
-                        alt={d.brand_name}
-                        className="w-12 h-12 rounded-xl object-cover border border-ivory-300"
-                      />
-                      <div>
-                        <h4 className="font-serif font-bold text-base text-charcoal-900">{d.brand_name}</h4>
-                        <span className="text-xs text-charcoal-500">{d.city}, {d.state} • {d.contact_person}</span>
-                      </div>
-                    </div>
+            {uploadSuccessMsg && (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs flex items-center gap-3 shadow-sm animate-fadeIn">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <span className="font-medium">{uploadSuccessMsg}</span>
+              </div>
+            )}
 
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        d.approval_status === 'approved'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : d.approval_status === 'pending'
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
+            <form onSubmit={handleUploadSaree} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Left Column: Specifications */}
+              <div className="lg:col-span-8 bg-white p-6 sm:p-8 rounded-3xl border border-ivory-300 shadow-sm space-y-5">
+                <h3 className="font-serif text-lg font-bold text-burgundy-950 border-b border-ivory-200 pb-3 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-gold-600" />
+                  <span>Saree Draping & Craft Attributes</span>
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                      Saree Design Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Royal Imperial Crimson Kanjivaram"
+                      className="w-full bg-[#FAF8F5] border border-ivory-300 rounded-xl py-2.5 px-3.5 text-xs text-charcoal-900 font-serif font-semibold focus:outline-none focus:ring-1 focus:ring-burgundy-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                      Curated Occasion
+                    </label>
+                    <select
+                      value={occasion}
+                      onChange={(e) => setOccasion(e.target.value)}
+                      className="w-full bg-[#FAF8F5] border border-ivory-300 rounded-xl py-2.5 px-3.5 text-xs text-charcoal-900 font-serif focus:outline-none focus:ring-1 focus:ring-burgundy-900"
                     >
-                      {d.approval_status}
-                    </span>
+                      <option value="Bridal & Wedding">Bridal & Wedding Trousseau</option>
+                      <option value="Festive & Puja Heirlooms">Festive & Puja Heirlooms</option>
+                      <option value="Cocktails & Evening Soirée">Cocktails & Evening Soirée</option>
+                      <option value="Single-Loom Heritage Archive">Single-Loom Heritage Archive</option>
+                    </select>
                   </div>
-
-                  <p className="text-xs text-charcoal-600 line-clamp-2">{d.brand_story}</p>
-
-                  <div className="p-3 bg-ivory-50 rounded-xl border border-ivory-200 text-xs space-y-1 font-mono">
-                    <div className="flex justify-between">
-                      <span className="text-charcoal-500">Studio Commission Rate:</span>
-                      <strong className="text-burgundy-900">{Math.round(d.default_commission_rate * 100)}% Studio Retained</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-charcoal-500">Designer Share:</span>
-                      <strong className="text-emerald-800">{Math.round((1 - d.default_commission_rate) * 100)}% Designer Payout</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-charcoal-500">Bank Account:</span>
-                      <span>{d.bank_account_number || 'N/A'} (IFSC: {d.bank_ifsc || 'N/A'})</span>
-                    </div>
-                  </div>
-
-                  {/* Admin Approval Buttons */}
-                  {d.approval_status === 'pending' && (
-                    <div className="pt-2 flex gap-2">
-                      <button
-                        onClick={() => {
-                          BombayDataStore.reviewDesigner(d.id, 'approved', 0.28, 'Approved by Board');
-                          alert(`${d.brand_name} has been approved!`);
-                        }}
-                        className="flex-1 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs transition"
-                      >
-                        Approve Application
-                      </button>
-                      <button
-                        onClick={() => {
-                          BombayDataStore.reviewDesigner(d.id, 'rejected', undefined, 'Documentation incomplete');
-                          alert(`${d.brand_name} rejected.`);
-                        }}
-                        className="px-4 py-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-800 font-semibold text-xs transition"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  )}
                 </div>
-              ))}
-            </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                      Fabric & Weave *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={fabric}
+                      onChange={(e) => setFabric(e.target.value)}
+                      placeholder="e.g. Pure Mulberry Silk & 24K Zari"
+                      className="w-full bg-[#FAF8F5] border border-ivory-300 rounded-xl py-2.5 px-3.5 text-xs text-charcoal-900 focus:outline-none focus:ring-1 focus:ring-burgundy-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                      Color Palette
+                    </label>
+                    <input
+                      type="text"
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      placeholder="e.g. Crimson Red & Antique Gold"
+                      className="w-full bg-[#FAF8F5] border border-ivory-300 rounded-xl py-2.5 px-3.5 text-xs text-charcoal-900 focus:outline-none focus:ring-1 focus:ring-burgundy-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                      Collection Category
+                    </label>
+                    <select
+                      value={categoryId}
+                      onChange={(e) => setCategoryId(e.target.value)}
+                      className="w-full bg-[#FAF8F5] border border-ivory-300 rounded-xl py-2.5 px-3.5 text-xs text-charcoal-900 font-serif focus:outline-none focus:ring-1 focus:ring-burgundy-900"
+                    >
+                      <option value="cat-kanjivaram">Kanjivaram Silks</option>
+                      <option value="cat-banarasi">Banarasi Brocades</option>
+                      <option value="cat-chanderi">Chanderi & Tissue</option>
+                      <option value="cat-paithani">Paithani Heritage</option>
+                      <option value="cat-organza">Organza & Pichwai</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                      Selling Price (₹ Taxes Inclusive) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={1000}
+                      step={500}
+                      value={price}
+                      onChange={(e) => setPrice(Number(e.target.value))}
+                      className="w-full bg-[#FAF8F5] border border-ivory-300 rounded-xl py-2.5 px-3.5 text-sm font-bold font-serif text-burgundy-950 focus:outline-none focus:ring-1 focus:ring-burgundy-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                      Original MRP (₹)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={price}
+                      step={500}
+                      value={mrp}
+                      onChange={(e) => setMrp(Number(e.target.value))}
+                      className="w-full bg-[#FAF8F5] border border-ivory-300 rounded-xl py-2.5 px-3.5 text-sm font-serif text-charcoal-600 focus:outline-none focus:ring-1 focus:ring-burgundy-900"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                    Master Loom Description & Weave Story
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full bg-[#FAF8F5] border border-ivory-300 rounded-xl py-2.5 px-3.5 text-xs text-charcoal-900 leading-relaxed focus:outline-none focus:ring-1 focus:ring-burgundy-900"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                      Drape Length
+                    </label>
+                    <input
+                      type="text"
+                      value={drapeLength}
+                      onChange={(e) => setDrapeLength(e.target.value)}
+                      className="w-full bg-[#FAF8F5] border border-ivory-300 rounded-xl py-2 px-3 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                      Blouse Specifications
+                    </label>
+                    <input
+                      type="text"
+                      value={blouseLength}
+                      onChange={(e) => setBlouseLength(e.target.value)}
+                      className="w-full bg-[#FAF8F5] border border-ivory-300 rounded-xl py-2 px-3 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="bestseller-check"
+                    checked={bestseller}
+                    onChange={(e) => setBestseller(e.target.checked)}
+                    className="rounded text-burgundy-900 accent-burgundy-900"
+                  />
+                  <label htmlFor="bestseller-check" className="text-xs font-serif text-charcoal-800 cursor-pointer">
+                    Feature as Studio Bestseller
+                  </label>
+                </div>
+              </div>
+
+              {/* Right Column: Visual Image & Barcode Batch */}
+              <div className="lg:col-span-4 space-y-6">
+                {/* Image Preview & Presets */}
+                <div className="bg-white p-6 rounded-3xl border border-ivory-300 shadow-sm space-y-4">
+                  <h4 className="font-serif text-base font-bold text-burgundy-950 flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-gold-600" />
+                    <span>Drape Photography</span>
+                  </h4>
+
+                  <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-ivory-100 border border-ivory-200">
+                    <img
+                      src={imageUrl}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 left-2 bg-charcoal-900/80 text-gold-300 text-[10px] font-mono px-2 py-0.5 rounded-full">
+                      Silk Mark Certified
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                      Image URL (Direct link)
+                    </label>
+                    <input
+                      type="url"
+                      required
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      className="w-full bg-[#FAF8F5] border border-ivory-300 rounded-xl py-2 px-3 text-[11px] text-charcoal-800"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-charcoal-500 block mb-2 font-semibold">
+                      Quick Silk Presets:
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {imagePresets.map((preset, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setImageUrl(preset.url);
+                            setFabric(preset.fabric);
+                            setColor(preset.color);
+                            setCategoryId(preset.cat);
+                          }}
+                          className="p-2 rounded-xl border border-ivory-200 hover:border-gold-500 text-left text-[10px] bg-[#FAF8F5] transition"
+                        >
+                          <span className="font-bold text-charcoal-800 block truncate">{preset.label}</span>
+                          <span className="text-charcoal-400 block truncate">{preset.color}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Physical Barcodes Issuance */}
+                <div className="bg-white p-6 rounded-3xl border-2 border-gold-500/40 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2 text-gold-800 font-bold font-serif text-base">
+                    <Barcode className="w-5 h-5 text-gold-600" />
+                    <span>Physical Barcode Issuance</span>
+                  </div>
+
+                  <p className="text-xs text-charcoal-500 font-light leading-relaxed">
+                    Set the physical pieces woven. Individual certified Code 128 barcodes will be generated and assigned to Kala Ghoda Studio Vault.
+                  </p>
+
+                  <div>
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
+                      Pieces to Mint & Receive (Physical Stock)
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={stockQuantity}
+                        onChange={(e) => setStockQuantity(Number(e.target.value))}
+                        className="w-24 bg-[#FAF8F5] border border-ivory-300 rounded-xl py-2.5 px-3 text-center font-bold text-base text-burgundy-950 font-mono"
+                      />
+                      <span className="text-xs text-charcoal-600 font-serif">
+                        Individual Code 128 Barcodes
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 3D Tactile Upload Button */}
+                  <button
+                    type="submit"
+                    className="btn-3d-gold w-full py-4 rounded-2xl font-serif font-bold text-sm tracking-wider shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Publish & Issue Barcodes</span>
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         )}
 
-        {/* Tab 3: Catalog & Submissions Management */}
-        {activeTab === 'catalog' && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="font-serif text-lg font-bold text-charcoal-900">
-                  Master Saree Catalog ({products.length} Designs)
-                </h3>
-                <p className="text-xs text-charcoal-500">
-                  Publish, review, or archive saree designs. Approved designs can have physical pieces received with barcodes.
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-ivory-300 overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left">
-                  <thead>
-                    <tr className="bg-ivory-100 text-charcoal-600 uppercase text-[10px] tracking-wider border-y border-ivory-300">
-                      <th className="py-3 px-4">Saree Name & Fabric</th>
-                      <th className="py-3 px-4">SKU</th>
-                      <th className="py-3 px-4">Ownership</th>
-                      <th className="py-3 px-4">Designer</th>
-                      <th className="py-3 px-4 text-right">Retail Price</th>
-                      <th className="py-3 px-4 text-center">Status</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-ivory-200">
-                    {products.map((p) => (
-                      <tr key={p.id} className="hover:bg-ivory-50">
-                        <td className="py-3 px-4">
-                          <p className="font-serif font-bold text-sm text-charcoal-900">{p.name}</p>
-                          <span className="text-[10px] text-charcoal-500">{p.fabric} • {p.occasion}</span>
-                        </td>
-                        <td className="py-3 px-4 font-mono font-semibold text-charcoal-700">{p.sku}</td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                            p.ownership_type === 'designer_consignment' ? 'bg-burgundy-100 text-burgundy-900' : 'bg-emerald-100 text-emerald-900'
-                          }`}>
-                            {p.ownership_type === 'designer_consignment' ? 'Consignment' : 'Studio Owned'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 font-medium text-charcoal-800">
-                          {p.designer?.brand_name || 'Bombay Studio'}
-                        </td>
-                        <td className="py-3 px-4 text-right font-serif font-bold text-burgundy-950">
-                          {formatINR(p.price)}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                            p.status === 'active'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : p.status === 'pending'
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-charcoal-200 text-charcoal-700'
-                          }`}>
-                            {p.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right space-x-1">
-                          {p.status === 'pending' ? (
-                            <button
-                              onClick={() => {
-                                BombayDataStore.updateProductStatus(p.id, 'active');
-                                alert(`${p.name} approved & published!`);
-                              }}
-                              className="px-2.5 py-1 bg-emerald-700 text-white rounded text-[11px] font-semibold"
-                            >
-                              Approve
-                            </button>
-                          ) : p.status === 'active' ? (
-                            <button
-                              onClick={() => {
-                                BombayDataStore.updateProductStatus(p.id, 'archived');
-                                alert(`${p.name} unlisted.`);
-                              }}
-                              className="px-2.5 py-1 bg-ivory-200 text-charcoal-700 rounded text-[11px] hover:bg-ivory-300"
-                            >
-                              Archive
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => {
-                                BombayDataStore.updateProductStatus(p.id, 'active');
-                                alert(`${p.name} activated.`);
-                              }}
-                              className="px-2.5 py-1 bg-emerald-700 text-white rounded text-[11px]"
-                            >
-                              Reactivate
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 4: Physical Inventory & Unique Barcodes */}
+        {/* ========================================================================= */}
+        {/* TAB 2: PHYSICAL BARCODE VAULT */}
+        {/* ========================================================================= */}
         {activeTab === 'inventory' && (
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ivory-300">
               <div>
-                <h3 className="font-serif text-lg font-bold text-charcoal-900">
-                  Individual Physical Saree Inventory ({inventory.length} Pieces)
-                </h3>
-                <p className="text-xs text-charcoal-500">
-                  Every physical saree piece is tracked by its unique Code 128 barcode across physical stores and warehouses.
-                </p>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-gold-700 font-bold block">
+                  Vault Transparency
+                </span>
+                <h2 className="font-serif text-2xl font-bold text-burgundy-950">
+                  Individual Physical Saree Barcodes ({filteredInventory.length})
+                </h2>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Search Bar */}
+              <div className="relative w-full sm:w-72">
                 <input
                   type="text"
                   value={inventorySearch}
                   onChange={(e) => setInventorySearch(e.target.value)}
-                  placeholder="Search barcode, location, saree..."
-                  className="bg-white border border-ivory-300 rounded-lg px-3 py-1.5 text-xs text-charcoal-900 focus:outline-none focus:ring-1 focus:ring-burgundy-800"
+                  placeholder="Search barcode, fabric, name..."
+                  className="w-full bg-white border border-ivory-300 rounded-xl py-2 pl-9 pr-3 text-xs text-charcoal-900 focus:outline-none focus:ring-1 focus:ring-burgundy-900"
                 />
-                <button
-                  onClick={() => setShowReceiveModal(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-burgundy-900 hover:bg-burgundy-950 text-gold-300 text-xs font-semibold shadow-sm transition"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Receive Stock</span>
-                </button>
+                <Search className="w-4 h-4 text-charcoal-400 absolute left-3 top-2.5" />
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-ivory-300 overflow-hidden shadow-sm">
+            {/* Inventory Table */}
+            <div className="bg-white rounded-3xl border border-ivory-300 overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left">
-                  <thead>
-                    <tr className="bg-ivory-100 text-charcoal-600 uppercase text-[10px] tracking-wider border-y border-ivory-300">
-                      <th className="py-3 px-3">Unique Barcode</th>
-                      <th className="py-3 px-3">Saree Title</th>
-                      <th className="py-3 px-3">Physical Location</th>
-                      <th className="py-3 px-3">Ownership</th>
-                      <th className="py-3 px-3">Condition</th>
-                      <th className="py-3 px-3">Status</th>
-                      <th className="py-3 px-3 text-right">Price</th>
-                      <th className="py-3 px-3 text-right">Actions</th>
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#1A060B] text-gold-300 font-serif text-[11px] uppercase tracking-wider">
+                    <tr>
+                      <th className="py-3.5 px-4">Barcode Tag</th>
+                      <th className="py-3.5 px-4">Saree Design</th>
+                      <th className="py-3.5 px-4">Fabric</th>
+                      <th className="py-3.5 px-4">Price</th>
+                      <th className="py-3.5 px-4">Location</th>
+                      <th className="py-3.5 px-4">Status</th>
+                      <th className="py-3.5 px-4 text-right">Label Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-ivory-200">
-                    {inventory
-                      .filter(
-                        (i) =>
-                          i.barcode.toLowerCase().includes(inventorySearch.toLowerCase()) ||
-                          i.product?.name.toLowerCase().includes(inventorySearch.toLowerCase()) ||
-                          i.location?.name.toLowerCase().includes(inventorySearch.toLowerCase())
-                      )
-                      .map((item) => (
-                        <tr key={item.id} className="hover:bg-ivory-50">
-                          <td className="py-3 px-3 font-mono font-bold text-burgundy-900 text-xs flex items-center gap-1.5">
-                            <Tag className="w-3.5 h-3.5 text-gold-600" />
-                            <span>{item.barcode}</span>
-                          </td>
-                          <td className="py-3 px-3">
-                            <p className="font-serif font-bold text-charcoal-900">{item.product?.name}</p>
-                            <span className="text-[10px] text-charcoal-500 font-mono">SKU: {item.product?.sku}</span>
-                          </td>
-                          <td className="py-3 px-3 font-medium text-charcoal-700">
-                            {item.location?.name}
-                          </td>
-                          <td className="py-3 px-3">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                              item.ownership_type === 'designer_consignment'
-                                ? 'bg-burgundy-50 text-burgundy-900 border border-burgundy-200'
-                                : 'bg-emerald-50 text-emerald-900 border border-emerald-200'
-                            }`}>
-                              {item.ownership_type === 'designer_consignment' ? item.designer?.brand_name : 'Bombay Studio'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                              item.condition === 'sellable' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              {item.condition}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                    {filteredInventory.map((item) => (
+                      <tr key={item.id} className="hover:bg-ivory-50 transition">
+                        <td className="py-3 px-4 font-mono font-bold text-burgundy-950">
+                          <span className="px-2.5 py-1 rounded-md bg-ivory-100 border border-ivory-300">
+                            {item.barcode}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 font-serif font-bold text-charcoal-900">
+                          {item.product?.name}
+                        </td>
+                        <td className="py-3 px-4 text-charcoal-600 font-mono text-[11px]">
+                          {item.product?.fabric}
+                        </td>
+                        <td className="py-3 px-4 font-serif font-bold text-burgundy-950">
+                          {formatINR(item.product?.price || 0)}
+                        </td>
+                        <td className="py-3 px-4 text-charcoal-600">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-burgundy-800" />
+                            <span>{item.location?.name || 'Kala Ghoda Studio'}</span>
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold uppercase ${
                               item.status === 'available'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : item.status === 'sold'
-                                ? 'bg-charcoal-200 text-charcoal-800'
-                                : 'bg-amber-100 text-amber-800'
-                            }`}>
-                              {item.status}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3 text-right font-serif font-bold text-burgundy-950">
-                            {formatINR(item.product?.price)}
-                          </td>
-                          <td className="py-3 px-3 text-right space-x-1">
-                            <button
-                              onClick={() => setSelectedBarcodeItem(item)}
-                              className="px-2 py-1 rounded bg-ivory-100 hover:bg-gold-100 text-charcoal-800 text-[11px] font-medium border border-ivory-300"
-                              title="Print Barcode Tag"
-                            >
-                              Tag
-                            </button>
-                            <button
-                              onClick={() => {
-                                setTransferTargetItem(item);
-                                setShowTransferModal(true);
-                              }}
-                              className="px-2 py-1 rounded bg-ivory-100 hover:bg-blue-100 text-charcoal-800 text-[11px] font-medium border border-ivory-300"
-                              title="Transfer Location"
-                            >
-                              Transfer
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 5: Omnichannel Orders & POS Transactions */}
-        {activeTab === 'orders' && (
-          <div className="space-y-4">
-            <h3 className="font-serif text-lg font-bold text-charcoal-900">
-              Omnichannel Sales Ledger ({sales.length} Transactions)
-            </h3>
-
-            <div className="bg-white rounded-2xl border border-ivory-300 overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left">
-                  <thead>
-                    <tr className="bg-ivory-100 text-charcoal-600 uppercase text-[10px] tracking-wider border-y border-ivory-300">
-                      <th className="py-3 px-4">Invoice / Order #</th>
-                      <th className="py-3 px-4">Channel</th>
-                      <th className="py-3 px-4">Date</th>
-                      <th className="py-3 px-4">Customer</th>
-                      <th className="py-3 px-4">Items / Barcodes</th>
-                      <th className="py-3 px-4 text-right">Total Payable</th>
-                      <th className="py-3 px-4 text-center">Status</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-ivory-200">
-                    {sales.map((sale) => (
-                      <tr key={sale.id} className="hover:bg-ivory-50">
-                        <td className="py-3 px-4 font-mono font-bold text-burgundy-900">{sale.sale_number}</td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                            sale.channel === 'pos' ? 'bg-purple-100 text-purple-900' : 'bg-blue-100 text-blue-900'
-                          }`}>
-                            {sale.channel === 'pos' ? 'Store POS' : 'Online Store'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-charcoal-600">{formatDateTime(sale.created_at)}</td>
-                        <td className="py-3 px-4 font-medium text-charcoal-900">{sale.customer_name || 'Walk-in Client'}</td>
-                        <td className="py-3 px-4">
-                          <span className="font-semibold text-charcoal-800 block">{sale.items?.length || 1} piece(s)</span>
-                          <span className="text-[10px] text-charcoal-400 font-mono">
-                            {sale.items?.[0]?.barcode_snapshot}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right font-serif font-bold text-sm text-burgundy-950">
-                          {formatINR(sale.total_payable)}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800">
-                            {sale.status}
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                : 'bg-charcoal-100 text-charcoal-600'
+                            }`}
+                          >
+                            {item.status}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-right">
                           <button
-                            onClick={() => setSelectedInvoiceSale(sale)}
-                            className="px-3 py-1 rounded bg-ivory-100 hover:bg-gold-100 text-burgundy-900 font-semibold border border-ivory-300 text-xs"
+                            onClick={() => setSelectedBarcodeItem(item)}
+                            className="btn-3d-gold inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold"
                           >
-                            Tax Invoice
+                            <Printer className="w-3.5 h-3.5" />
+                            <span>Print Barcode</span>
                           </button>
                         </td>
                       </tr>
@@ -826,368 +738,232 @@ export const AdminMode: React.FC = () => {
           </div>
         )}
 
-        {/* Tab 6: Designer Settlements & Payouts Engine */}
-        {activeTab === 'payouts' && (
+        {/* ========================================================================= */}
+        {/* TAB 3: SAREE DESIGNS CATALOG */}
+        {/* ========================================================================= */}
+        {activeTab === 'catalog' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ivory-300">
               <div>
-                <h3 className="font-serif text-lg font-bold text-charcoal-900">
-                  Designer Settlement Ledger & Batch Payouts
-                </h3>
-                <p className="text-xs text-charcoal-500">
-                  Formula: Eligible Sale Amount = Final discounted item price excluding applicable taxes.
-                  Payout batches lock eligible items and execute bank transfers.
-                </p>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-gold-700 font-bold block">
+                  Studio Catalog
+                </span>
+                <h2 className="font-serif text-2xl font-bold text-burgundy-950">
+                  Master Saree Designs ({filteredProducts.length})
+                </h2>
+              </div>
+
+              <div className="relative w-full sm:w-72">
+                <input
+                  type="text"
+                  value={catalogSearch}
+                  onChange={(e) => setCatalogSearch(e.target.value)}
+                  placeholder="Search catalog designs..."
+                  className="w-full bg-white border border-ivory-300 rounded-xl py-2 pl-9 pr-3 text-xs text-charcoal-900 focus:outline-none focus:ring-1 focus:ring-burgundy-900"
+                />
+                <Search className="w-4 h-4 text-charcoal-400 absolute left-3 top-2.5" />
               </div>
             </div>
 
-            {/* Designer Balances Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {designers.filter(d => d.approval_status === 'approved').map((d) => {
-                const dAllocs = allocations.filter((a) => a.designer_id === d.id);
-                const eligibleAmt = dAllocs
-                  .filter((a) => a.status === 'eligible')
-                  .reduce((sum, a) => sum + a.designer_amount, 0);
-
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map((prod) => {
+                const stock = inventory.filter((i) => i.product_id === prod.id && i.status === 'available').length;
                 return (
-                  <div key={d.id} className="bg-white rounded-2xl border border-ivory-300 p-5 shadow-sm space-y-3">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-serif font-bold text-sm text-charcoal-900">{d.brand_name}</h4>
-                      <span className="text-[10px] text-charcoal-500 font-mono">{dAllocs.length} sales allocated</span>
+                  <div
+                    key={prod.id}
+                    className="bg-white rounded-3xl border border-ivory-300 overflow-hidden shadow-sm flex flex-col justify-between p-5"
+                  >
+                    <div>
+                      <div className="flex gap-4 items-start">
+                        <img
+                          src={prod.images?.[0] ? (typeof prod.images[0] === 'string' ? prod.images[0] : (prod.images[0] as any).image_url) : ''}
+                          alt={prod.name}
+                          className="w-20 h-24 object-cover rounded-2xl shadow-sm border border-ivory-200 flex-shrink-0"
+                        />
+                        <div className="flex-1">
+                          <span className="text-[10px] font-mono uppercase text-gold-700 font-bold block">
+                            SKU: {prod.sku}
+                          </span>
+                          <h4 className="font-serif text-base font-bold text-burgundy-950 mt-0.5 leading-snug">
+                            {prod.name}
+                          </h4>
+                          <span className="text-xs text-charcoal-500 font-mono block mt-0.5">
+                            {prod.fabric}
+                          </span>
+                          <div className="flex items-baseline gap-2 mt-1">
+                            <span className="font-serif font-bold text-burgundy-950 text-base">
+                              {formatINR(prod.price)}
+                            </span>
+                            <span className="text-xs text-charcoal-400 line-through">
+                              {formatINR(prod.mrp)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-ivory-200 flex items-center justify-between text-xs">
+                        <span className="text-charcoal-500 font-mono">Available Stock:</span>
+                        <span className="font-serif font-bold text-burgundy-950 bg-ivory-100 px-3 py-1 rounded-full border border-ivory-300">
+                          {stock} physical drapes
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="p-3 bg-ivory-50 rounded-xl border border-ivory-200">
-                      <span className="text-[11px] text-charcoal-500 uppercase block font-semibold">Cleared for Direct Payout</span>
-                      <span className="font-serif text-xl font-bold text-emerald-900 mt-0.5 block">
-                        {formatINR(eligibleAmt)}
-                      </span>
+                    <div className="mt-4 pt-3 border-t border-ivory-200">
+                      {quickAddProductId === prod.id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={1}
+                            max={20}
+                            value={quickAddCount}
+                            onChange={(e) => setQuickAddCount(Number(e.target.value))}
+                            className="w-16 bg-[#FAF8F5] border border-ivory-300 rounded-lg py-1 px-2 text-center text-xs font-mono font-bold"
+                          />
+                          <button
+                            onClick={() => handleAddPiecesToProduct(prod.id)}
+                            className="btn-3d-gold flex-1 py-1.5 rounded-lg text-xs font-serif font-bold"
+                          >
+                            Generate Barcodes
+                          </button>
+                          <button
+                            onClick={() => setQuickAddProductId(null)}
+                            className="text-charcoal-400 hover:text-charcoal-600 px-2"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setQuickAddProductId(prod.id)}
+                          className="w-full py-2 rounded-xl bg-ivory-100 hover:bg-ivory-200 text-burgundy-950 font-serif font-bold text-xs border border-ivory-300 transition flex items-center justify-center gap-1.5"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add More Physical Pieces & Barcodes</span>
+                        </button>
+                      )}
                     </div>
-
-                    <button
-                      onClick={() => handleCreatePayoutBatch(d.id)}
-                      disabled={eligibleAmt <= 0}
-                      className={`w-full py-2.5 rounded-xl font-semibold text-xs tracking-wider uppercase transition shadow-sm ${
-                        eligibleAmt > 0
-                          ? 'bg-burgundy-900 hover:bg-burgundy-950 text-gold-300'
-                          : 'bg-charcoal-200 text-charcoal-400 cursor-not-allowed'
-                      }`}
-                    >
-                      Create Payout Batch ({formatINR(eligibleAmt)})
-                    </button>
                   </div>
                 );
               })}
             </div>
+          </div>
+        )}
 
-            {/* Payout Batches Table */}
-            <div className="bg-white rounded-2xl border border-ivory-300 p-5 shadow-sm space-y-3">
-              <h4 className="font-serif font-bold text-sm text-charcoal-900">Disbursed Payout Batches</h4>
+        {/* ========================================================================= */}
+        {/* TAB 4: POS & BOUTIQUE ORDERS */}
+        {/* ========================================================================= */}
+        {activeTab === 'orders' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ivory-300">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-gold-700 font-bold block">
+                  Studio Transactions
+                </span>
+                <h2 className="font-serif text-2xl font-bold text-burgundy-950">
+                  Sales Ledger & Tax Invoices ({filteredSales.length})
+                </h2>
+              </div>
+
+              <div className="relative w-full sm:w-72">
+                <input
+                  type="text"
+                  value={salesSearch}
+                  onChange={(e) => setSalesSearch(e.target.value)}
+                  placeholder="Search invoice, customer..."
+                  className="w-full bg-white border border-ivory-300 rounded-xl py-2 pl-9 pr-3 text-xs text-charcoal-900 focus:outline-none focus:ring-1 focus:ring-burgundy-900"
+                />
+                <Search className="w-4 h-4 text-charcoal-400 absolute left-3 top-2.5" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl border border-ivory-300 overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left">
-                  <thead>
-                    <tr className="bg-ivory-100 text-charcoal-600 uppercase text-[10px] tracking-wider border-y border-ivory-300">
-                      <th className="py-2.5 px-3">Batch Number</th>
-                      <th className="py-2.5 px-3">Designer</th>
-                      <th className="py-2.5 px-3">Date</th>
-                      <th className="py-2.5 px-3">Destination Account</th>
-                      <th className="py-2.5 px-3 text-right">Disbursed Amount</th>
-                      <th className="py-2.5 px-3 text-center">Status</th>
-                      <th className="py-2.5 px-3 text-right">Action</th>
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#1A060B] text-gold-300 font-serif text-[11px] uppercase tracking-wider">
+                    <tr>
+                      <th className="py-3.5 px-4">Invoice #</th>
+                      <th className="py-3.5 px-4">Date & Time</th>
+                      <th className="py-3.5 px-4">Channel</th>
+                      <th className="py-3.5 px-4">Customer</th>
+                      <th className="py-3.5 px-4">Items / Barcodes</th>
+                      <th className="py-3.5 px-4">Net Total</th>
+                      <th className="py-3.5 px-4 text-right">Invoices</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-ivory-200">
-                    {payouts.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="py-6 text-center text-charcoal-400 italic">
-                          No payout batches created yet.
+                    {filteredSales.map((sale) => (
+                      <tr key={sale.id} className="hover:bg-ivory-50 transition">
+                        <td className="py-3 px-4 font-mono font-bold text-burgundy-950">
+                          {sale.sale_number}
+                        </td>
+                        <td className="py-3 px-4 text-charcoal-500 font-mono text-[11px]">
+                          {formatDateTime(sale.created_at)}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              sale.channel === 'pos'
+                                ? 'bg-burgundy-100 text-burgundy-900 border border-burgundy-300'
+                                : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                            }`}
+                          >
+                            {sale.channel === 'pos' ? 'Store POS' : 'Online'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 font-serif font-bold text-charcoal-900">
+                          {sale.customer_name || 'Walk-in Client'}
+                        </td>
+                        <td className="py-3 px-4 text-charcoal-600 font-mono text-[11px]">
+                          {sale.items?.length || 0} pieces
+                        </td>
+                        <td className="py-3 px-4 font-serif font-bold text-burgundy-950">
+                          {formatINR(sale.total_payable)}
+                        </td>
+                        <td className="py-3 px-4 text-right space-x-2">
+                          <button
+                            onClick={() => setSelectedInvoiceSale(sale)}
+                            className="btn-3d-burgundy inline-flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold"
+                          >
+                            <FileText className="w-3 h-3 text-gold-400" />
+                            <span>Tax Invoice</span>
+                          </button>
+                          {sale.channel === 'pos' && (
+                            <button
+                              onClick={() => setSelectedThermalSale(sale)}
+                              className="btn-3d-gold inline-flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold"
+                            >
+                              <Printer className="w-3 h-3" />
+                              <span>POS Slip</span>
+                            </button>
+                          )}
                         </td>
                       </tr>
-                    ) : (
-                      payouts.map((p) => (
-                        <tr key={p.id} className="hover:bg-ivory-50">
-                          <td className="py-3 px-3 font-mono font-bold text-burgundy-900">{p.payout_number}</td>
-                          <td className="py-3 px-3 font-semibold text-charcoal-900">{p.designer?.brand_name}</td>
-                          <td className="py-3 px-3 text-charcoal-600">{formatDate(p.created_at)}</td>
-                          <td className="py-3 px-3 font-mono text-[11px] text-charcoal-600">{p.bank_account_snapshot}</td>
-                          <td className="py-3 px-3 text-right font-serif font-bold text-sm text-charcoal-900">{formatINR(p.amount)}</td>
-                          <td className="py-3 px-3 text-center">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              p.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                            }`}>
-                              {p.status}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3 text-right">
-                            {p.status === 'approved' && (
-                              <button
-                                onClick={() => handleSettlePayout(p.id)}
-                                className="px-3 py-1 rounded bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs transition"
-                              >
-                                Settle Bank Transfer
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    )}
+                    ))}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
         )}
+      </main>
 
-        {/* Tab 7: Reports & CSV Export Center */}
-        {activeTab === 'reports' && (
-          <div className="bg-white rounded-2xl border border-ivory-300 p-6 shadow-sm space-y-6">
-            <div>
-              <h3 className="font-serif text-lg font-bold text-charcoal-900">
-                Official Business Reports & Data Exports
-              </h3>
-              <p className="text-xs text-charcoal-500">
-                Export verified accounting datasets for GST reconciliation, inventory valuation, and designer settlement audits.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-5 bg-ivory-50 rounded-xl border border-ivory-200 flex flex-col justify-between space-y-4">
-                <div>
-                  <div className="w-10 h-10 rounded-lg bg-burgundy-100 text-burgundy-900 flex items-center justify-center mb-3">
-                    <FileSpreadsheet className="w-5 h-5" />
-                  </div>
-                  <h4 className="font-serif font-bold text-sm text-charcoal-900">Omnichannel Sales Report</h4>
-                  <p className="text-xs text-charcoal-500 mt-1">
-                    Daily sales, invoices, GST breakdowns, payments, and channel attribution.
-                  </p>
-                </div>
-                <button
-                  onClick={exportSalesCsv}
-                  className="w-full py-2.5 px-3 rounded-lg bg-burgundy-900 text-gold-300 font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-burgundy-950 transition"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Download Sales CSV</span>
-                </button>
-              </div>
-
-              <div className="p-5 bg-ivory-50 rounded-xl border border-ivory-200 flex flex-col justify-between space-y-4">
-                <div>
-                  <div className="w-10 h-10 rounded-lg bg-gold-100 text-gold-900 flex items-center justify-center mb-3">
-                    <Barcode className="w-5 h-5" />
-                  </div>
-                  <h4 className="font-serif font-bold text-sm text-charcoal-900">Physical Saree Inventory</h4>
-                  <p className="text-xs text-charcoal-500 mt-1">
-                    Every piece's unique barcode, stock status, location, ownership, and acquisition cost.
-                  </p>
-                </div>
-                <button
-                  onClick={exportInventoryCsv}
-                  className="w-full py-2.5 px-3 rounded-lg bg-burgundy-900 text-gold-300 font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-burgundy-950 transition"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Download Stock CSV</span>
-                </button>
-              </div>
-
-              <div className="p-5 bg-ivory-50 rounded-xl border border-ivory-200 flex flex-col justify-between space-y-4">
-                <div>
-                  <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-900 flex items-center justify-center mb-3">
-                    <DollarSign className="w-5 h-5" />
-                  </div>
-                  <h4 className="font-serif font-bold text-sm text-charcoal-900">Settlement Ledger Report</h4>
-                  <p className="text-xs text-charcoal-500 mt-1">
-                    Designer commission allocations, return reversals, and paid batch records.
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    const headers = ['Designer', 'Allocation ID', 'Amount', 'Date', 'Type'];
-                    const rows = allocations.map((a) => [
-                      `"${a.designer?.brand_name || ''}"`,
-                      a.id,
-                      a.designer_amount.toString(),
-                      a.created_at,
-                      a.status,
-                    ]);
-                    exportCsv(`bombay_saree_settlement_${Date.now()}.csv`, [headers, ...rows]);
-                  }}
-                  className="w-full py-2.5 px-3 rounded-lg bg-burgundy-900 text-gold-300 font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-burgundy-950 transition"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Download Ledger CSV</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 8: Settings & Tax Configuration */}
-        {activeTab === 'settings' && (
-          <div className="bg-white rounded-2xl border border-ivory-300 p-6 shadow-sm space-y-6">
-            <h3 className="font-serif text-lg font-bold text-charcoal-900">
-              Bombay Saree Retail & Omnichannel Parameters
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-4 bg-ivory-50 rounded-xl border border-ivory-200 space-y-1">
-                <span className="font-semibold text-charcoal-500 uppercase block">Currency Representation</span>
-                <p className="font-serif text-base font-bold text-charcoal-900">INR (₹) — Indian Rupee</p>
-                <p className="text-charcoal-500">Exact numeric storage with defined precision.</p>
-              </div>
-
-              <div className="p-4 bg-ivory-50 rounded-xl border border-ivory-200 space-y-1">
-                <span className="font-semibold text-charcoal-500 uppercase block">Applicable GST on Sarees</span>
-                <p className="font-serif text-base font-bold text-charcoal-900">5.0% (HSN 5007 Silk Sarees)</p>
-                <p className="text-charcoal-500">CGST 2.5% + SGST 2.5% for intra-state Maharashtra supply.</p>
-              </div>
-
-              <div className="p-4 bg-ivory-50 rounded-xl border border-ivory-200 space-y-1">
-                <span className="font-semibold text-charcoal-500 uppercase block">Return & Exchange Window</span>
-                <p className="font-serif text-base font-bold text-charcoal-900">7 Days Post-Delivery</p>
-                <p className="text-charcoal-500">Settlements to designers clear only after this window expires.</p>
-              </div>
-
-              <div className="p-4 bg-ivory-50 rounded-xl border border-ivory-200 space-y-1">
-                <span className="font-semibold text-charcoal-500 uppercase block">Barcode Encoding Standard</span>
-                <p className="font-serif text-base font-bold text-charcoal-900">Code 128 (High-Density Retail)</p>
-                <p className="text-charcoal-500">Compatible with USB / Bluetooth HID handheld laser scanners.</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Receive Stock Modal */}
-      {showReceiveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/75 backdrop-blur-sm animate-fade-in overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-ivory-300 overflow-hidden flex flex-col">
-            <div className="bg-burgundy-950 text-ivory-100 px-6 py-4 flex items-center justify-between border-b border-gold-600/30">
-              <h3 className="font-serif text-base font-bold">Receive Physical Saree Stock (Barcode Tagging)</h3>
-              <button onClick={() => setShowReceiveModal(false)} className="p-1 hover:text-white rounded">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleReceiveStock} className="p-6 space-y-4 text-xs">
-              <div>
-                <label className="font-bold text-charcoal-700 block mb-1">Select Catalog Saree</label>
-                <select
-                  value={receiveProductId}
-                  onChange={(e) => setReceiveProductId(e.target.value)}
-                  required
-                  className="w-full bg-ivory-50 border border-ivory-300 rounded-lg p-2.5 font-medium text-charcoal-900 focus:outline-none focus:ring-1 focus:ring-burgundy-800"
-                >
-                  <option value="">-- Choose Saree Design --</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.sku}) — {p.ownership_type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-semibold text-charcoal-700 block mb-1">Receiving Destination</label>
-                  <select
-                    value={receiveLocationId}
-                    onChange={(e) => setReceiveLocationId(e.target.value)}
-                    className="w-full bg-ivory-50 border border-ivory-300 rounded-lg p-2 font-medium"
-                  >
-                    {locations.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="font-semibold text-charcoal-700 block mb-1">Acquisition Cost (₹)</label>
-                  <input
-                    type="number"
-                    value={receiveCost}
-                    onChange={(e) => setReceiveCost(Number(e.target.value))}
-                    className="w-full bg-ivory-50 border border-ivory-300 rounded-lg p-2 font-mono"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="font-semibold text-charcoal-700 block mb-1">
-                  Unique Barcode(s) to Assign (One per line, or leave empty for auto-generation)
-                </label>
-                <textarea
-                  value={receiveBarcodes}
-                  onChange={(e) => setReceiveBarcodes(e.target.value)}
-                  placeholder={`BS-KAN-003\nBS-KAN-004`}
-                  rows={3}
-                  className="w-full bg-ivory-50 border border-ivory-300 rounded-lg p-2 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-burgundy-800"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-300 font-bold uppercase tracking-wider text-xs transition shadow-luxury"
-              >
-                Intake Stock & Register Barcodes
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Inter-Store Transfer Modal */}
-      {showTransferModal && transferTargetItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/75 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full border border-ivory-300 overflow-hidden">
-            <div className="bg-charcoal-900 text-ivory-100 px-5 py-3.5 flex items-center justify-between">
-              <h3 className="font-serif text-sm font-bold">Inter-Store Physical Transfer</h3>
-              <button onClick={() => setShowTransferModal(false)} className="p-1 hover:text-white rounded">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-4 text-xs">
-              <p>
-                Transfer piece <strong className="font-mono text-burgundy-900">{transferTargetItem.barcode}</strong> ({transferTargetItem.product?.name})
-              </p>
-
-              <div>
-                <label className="font-semibold text-charcoal-700 block mb-1">Destination Location</label>
-                <select
-                  value={transferTargetLocation}
-                  onChange={(e) => setTransferTargetLocation(e.target.value)}
-                  className="w-full bg-ivory-50 border border-ivory-300 rounded-lg p-2"
-                >
-                  {locations.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                onClick={handleTransferStock}
-                className="w-full py-2.5 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-300 font-semibold text-xs transition"
-              >
-                Confirm Physical Transfer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Barcode Modal Preview */}
+      {/* Barcode Print Modal */}
       <BarcodeModal
         item={selectedBarcodeItem}
         onClose={() => setSelectedBarcodeItem(null)}
       />
 
-      {/* Invoice Modal Preview */}
+      {/* A4 Tax Invoice Modal */}
       <InvoiceModal
         sale={selectedInvoiceSale}
         onClose={() => setSelectedInvoiceSale(null)}
+      />
+
+      {/* POS Thermal Receipt Modal */}
+      <ThermalReceiptModal
+        sale={selectedThermalSale}
+        onClose={() => setSelectedThermalSale(null)}
       />
     </div>
   );

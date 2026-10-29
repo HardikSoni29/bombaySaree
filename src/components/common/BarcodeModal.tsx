@@ -76,14 +76,10 @@ export const BarcodeModal: React.FC<BarcodeModalProps> = ({ item, onClose }) => 
             <div className="flex items-center justify-between pt-2 border-t border-ivory-300">
               <div className="text-left">
                 <span className="text-[10px] uppercase text-charcoal-400 block font-semibold tracking-wider">
-                  Ownership
+                  Studio Provenance
                 </span>
-                <span className={`text-[11px] font-semibold ${
-                  item.ownership_type === 'designer_consignment' ? 'text-burgundy-800' : 'text-emerald-700'
-                }`}>
-                  {item.ownership_type === 'designer_consignment'
-                    ? `Consignment: ${item.designer?.brand_name || 'Designer'}`
-                    : 'Bombay Saree Owned'}
+                <span className="text-[11px] font-semibold text-burgundy-900 font-serif">
+                  Bombay Saree Heritage Loom
                 </span>
               </div>
 

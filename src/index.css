@@ -8,6 +8,7 @@
     color: #1C1917;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     letter-spacing: 0.01em;
+    perspective: 1200px;
   }
 
   h1, h2, h3, h4, .font-serif, .font-display {
@@ -20,8 +21,122 @@
   }
 }
 
+/* 3D Perspective & Depth System */
+.perspective-800 {
+  perspective: 800px;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-1200 {
+  perspective: 1200px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* 3D Card Hover & Tilt */
+.card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.45s ease;
+  will-change: transform;
+}
+
+.card-3d:hover {
+  transform: perspective(1000px) rotateX(4deg) rotateY(-3deg) translateY(-8px) scale3d(1.02, 1.02, 1.02);
+  box-shadow: 0 25px 50px -12px rgba(51, 8, 18, 0.22), 0 0 30px rgba(212, 175, 55, 0.15);
+}
+
+.card-3d-floating {
+  transform: translateZ(28px);
+  transform-style: preserve-3d;
+}
+
+.card-3d-deep {
+  transform: translateZ(45px);
+  transform-style: preserve-3d;
+}
+
+/* Floating 3D Gentle Bob Animation */
+@keyframes float3d {
+  0%, 100% {
+    transform: translateY(0px) rotateX(0deg) rotateY(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotateX(3deg) rotateY(-2deg);
+  }
+}
+
+.animate-float-3d {
+  animation: float3d 5s ease-in-out infinite;
+}
+
+/* Tactile 3D Buttons */
+.btn-3d-gold {
+  background: linear-gradient(180deg, #F9E7A2 0%, #D4AF37 50%, #B89228 100%);
+  color: #330812;
+  box-shadow: 0 4px 0 #856417, 0 10px 20px rgba(212, 175, 55, 0.35);
+  transition: all 0.15s ease-out;
+  transform: translateY(0);
+}
+
+.btn-3d-gold:hover {
+  background: linear-gradient(180deg, #FFF0B8 0%, #DFC153 50%, #C49E31 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #856417, 0 14px 26px rgba(212, 175, 55, 0.45);
+}
+
+.btn-3d-gold:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #856417, 0 4px 10px rgba(212, 175, 55, 0.25);
+}
+
+.btn-3d-burgundy {
+  background: linear-gradient(180deg, #6B172A 0%, #4A0D18 50%, #330812 100%);
+  color: #F6E9C4;
+  box-shadow: 0 4px 0 #1A0409, 0 10px 20px rgba(51, 8, 18, 0.35);
+  transition: all 0.15s ease-out;
+  transform: translateY(0);
+}
+
+.btn-3d-burgundy:hover {
+  background: linear-gradient(180deg, #801A32 0%, #541221 50%, #3B0A14 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #1A0409, 0 14px 26px rgba(51, 8, 18, 0.45);
+}
+
+.btn-3d-burgundy:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #1A0409, 0 4px 10px rgba(51, 8, 18, 0.25);
+}
+
+/* Glassmorphism with 3D Depth */
+.glass-3d {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 20px 45px -10px rgba(51, 8, 18, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.glass-3d-dark {
+  background: rgba(26, 6, 11, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Gold Gradient & Specular Light */
 .gold-gradient-text {
-  background: linear-gradient(135deg, #F9F2DB 0%, #D4AF37 50%, #A58019 100%);
+  background: linear-gradient(135deg, #FDF7E7 0%, #D4AF37 50%, #A58019 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -39,7 +154,7 @@
 }
 
 .luxury-shadow {
-  box-shadow: 0 10px 30px -5px rgba(58, 12, 22, 0.07), 0 4px 12px -2px rgba(58, 12, 22, 0.04);
+  box-shadow: 0 10px 30px -5px rgba(58, 12, 22, 0.08), 0 4px 12px -2px rgba(58, 12, 22, 0.04);
 }
 
 .luxury-card-hover {
@@ -47,10 +162,9 @@
 }
 
 .luxury-card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px -8px rgba(58, 12, 22, 0.12), 0 0 25px rgba(212, 175, 55, 0.12);
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px -10px rgba(58, 12, 22, 0.16), 0 0 28px rgba(212, 175, 55, 0.16);
 }
-
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
@@ -101,21 +215,4 @@
     padding: 15mm !important;
     margin: 0 auto !important;
   }
-}
-
-/* Animations & glass effects */
-.glass-nav {
-  background: rgba(253, 252, 247, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.gold-gradient-text {
-  background: linear-gradient(135deg, #D4AF37 0%, #F6E9C4 50%, #B89228 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.burgundy-gradient {
-  background: linear-gradient(135deg, #6B172A 0%, #330812 100%);
 }

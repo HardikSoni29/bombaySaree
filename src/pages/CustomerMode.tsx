@@ -18,11 +18,9 @@ import {
   MapPin,
   ShieldCheck,
   Award,
-  Filter,
   ArrowUpDown,
   Heart,
   Mail,
-  Instagram,
   Phone,
   Clock,
   Crown,
@@ -30,7 +28,6 @@ import {
   Gem,
   Compass,
   ArrowRight,
-  Calendar,
   Barcode,
   KeyRound,
 } from 'lucide-react';
@@ -51,7 +48,6 @@ export const CustomerMode: React.FC = () => {
 
   // Filters & Sorting
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc'>('featured');
-  const [filterOwnership, setFilterOwnership] = useState<'all' | 'designer_consignment' | 'bombay_owned'>('all');
   const [filterInStockOnly, setFilterInStockOnly] = useState<boolean>(false);
 
   // Force re-render on wishlist changes
@@ -59,7 +55,6 @@ export const CustomerMode: React.FC = () => {
 
   const products = BombayDataStore.getProducts().filter((p) => p.status === 'active');
   const wishlistItems = BombayDataStore.getWishlist(user.id);
-  const designers = BombayDataStore.getDesigners().filter((d) => d.approval_status === 'approved');
 
   // Filter & Sort Logic
   let filtered = products.filter((p) => {
@@ -67,8 +62,7 @@ export const CustomerMode: React.FC = () => {
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.fabric.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.color.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.occasion.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.designer?.brand_name || '').toLowerCase().includes(searchQuery.toLowerCase());
+      p.occasion.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
       selectedCategory === 'all' || p.category_id === selectedCategory;
@@ -77,12 +71,9 @@ export const CustomerMode: React.FC = () => {
       selectedOccasion === 'all' ||
       p.occasion.toLowerCase().includes(selectedOccasion.toLowerCase());
 
-    const matchesOwnership =
-      filterOwnership === 'all' || p.ownership_type === filterOwnership;
-
     const matchesStock = !filterInStockOnly || (p.available_stock_count ?? 0) > 0;
 
-    return matchesSearch && matchesCategory && matchesOccasion && matchesOwnership && matchesStock;
+    return matchesSearch && matchesCategory && matchesOccasion && matchesStock;
   });
 
   if (sortBy === 'price-asc') {
@@ -139,7 +130,7 @@ export const CustomerMode: React.FC = () => {
         setSelectedCategory={setSelectedCategory}
       />
 
-      {/* Hero Showcase Banner */}
+      {/* Hero Showcase Banner with 3D Depth */}
       <HeroBanner
         onExplore={() => {
           setSelectedCategory('all');
@@ -155,8 +146,8 @@ export const CustomerMode: React.FC = () => {
         }}
       />
 
-      {/* Curated Occasion Portals (Haute Couture Gateways) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 w-full">
+      {/* Curated Occasion Portals (3D Haute Couture Gateways) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 w-full perspective-1000">
         <div className="text-center max-w-2xl mx-auto mb-10">
           <span className="text-[11px] uppercase font-serif tracking-[0.25em] text-gold-700 block font-semibold">
             Curated Occasion Edits
@@ -171,22 +162,22 @@ export const CustomerMode: React.FC = () => {
           {/* Card 1: The Bridal Trousseau */}
           <div
             onClick={() => handleOccasionClick('Bridal')}
-            className={`group relative h-96 rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-luxury-hover transition-all duration-500 border ${
-              selectedOccasion === 'Bridal' ? 'border-gold-500 ring-2 ring-gold-400' : 'border-ivory-300'
+            className={`group relative h-96 rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 border card-3d ${
+              selectedOccasion === 'Bridal' ? 'border-gold-500 ring-4 ring-gold-400/40' : 'border-ivory-300'
             }`}
           >
             <img
               src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=85"
               alt="Bridal Trousseau"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-burgundy-950 via-burgundy-950/40 to-transparent" />
-            <div className="absolute top-4 left-4">
-              <span className="p-2 rounded-full bg-gold-500/20 text-gold-300 border border-gold-400/30 backdrop-blur-md inline-block">
+            <div className="absolute top-4 left-4 card-3d-floating">
+              <span className="p-2.5 rounded-full bg-gold-500/25 text-gold-300 border border-gold-400/40 backdrop-blur-md inline-block shadow-md">
                 <Crown className="w-4 h-4" />
               </span>
             </div>
-            <div className="absolute bottom-6 left-6 right-6 text-ivory-50">
+            <div className="absolute bottom-6 left-6 right-6 text-ivory-50 card-3d-floating">
               <span className="text-[10px] font-mono uppercase tracking-widest text-gold-300 block mb-1">
                 Sacred Muhurtham
               </span>
@@ -194,7 +185,7 @@ export const CustomerMode: React.FC = () => {
               <p className="text-xs text-ivory-200/80 mt-1.5 font-light line-clamp-2">
                 Heavy Kanjivaram Korvai silks & pure gold zari heirloom brocades.
               </p>
-              <span className="inline-flex items-center gap-1 text-[11px] font-serif text-gold-300 mt-3 group-hover:translate-x-1 transition-transform">
+              <span className="inline-flex items-center gap-1.5 text-xs font-serif text-gold-300 font-bold mt-3 group-hover:translate-x-1.5 transition-transform">
                 <span>Explore Bridal Drapes</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </span>
@@ -204,22 +195,22 @@ export const CustomerMode: React.FC = () => {
           {/* Card 2: Festive & Puja Heirlooms */}
           <div
             onClick={() => handleOccasionClick('Festive')}
-            className={`group relative h-96 rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-luxury-hover transition-all duration-500 border ${
-              selectedOccasion === 'Festive' ? 'border-gold-500 ring-2 ring-gold-400' : 'border-ivory-300'
+            className={`group relative h-96 rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 border card-3d ${
+              selectedOccasion === 'Festive' ? 'border-gold-500 ring-4 ring-gold-400/40' : 'border-ivory-300'
             }`}
           >
             <img
               src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=85"
               alt="Festive Heirlooms"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-burgundy-950 via-burgundy-950/40 to-transparent" />
-            <div className="absolute top-4 left-4">
-              <span className="p-2 rounded-full bg-gold-500/20 text-gold-300 border border-gold-400/30 backdrop-blur-md inline-block">
+            <div className="absolute top-4 left-4 card-3d-floating">
+              <span className="p-2.5 rounded-full bg-gold-500/25 text-gold-300 border border-gold-400/40 backdrop-blur-md inline-block shadow-md">
                 <Flame className="w-4 h-4" />
               </span>
             </div>
-            <div className="absolute bottom-6 left-6 right-6 text-ivory-50">
+            <div className="absolute bottom-6 left-6 right-6 text-ivory-50 card-3d-floating">
               <span className="text-[10px] font-mono uppercase tracking-widest text-gold-300 block mb-1">
                 Auspicious Celebrations
               </span>
@@ -227,7 +218,7 @@ export const CustomerMode: React.FC = () => {
               <p className="text-xs text-ivory-200/80 mt-1.5 font-light line-clamp-2">
                 Meenakari floral weaves, Yeola Paithanis, and Banarasi Kadwa drapes.
               </p>
-              <span className="inline-flex items-center gap-1 text-[11px] font-serif text-gold-300 mt-3 group-hover:translate-x-1 transition-transform">
+              <span className="inline-flex items-center gap-1.5 text-xs font-serif text-gold-300 font-bold mt-3 group-hover:translate-x-1.5 transition-transform">
                 <span>View Festive Edit</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </span>
@@ -237,22 +228,22 @@ export const CustomerMode: React.FC = () => {
           {/* Card 3: Cocktails & Metallic Tissue */}
           <div
             onClick={() => handleOccasionClick('Cocktail')}
-            className={`group relative h-96 rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-luxury-hover transition-all duration-500 border ${
-              selectedOccasion === 'Cocktail' ? 'border-gold-500 ring-2 ring-gold-400' : 'border-ivory-300'
+            className={`group relative h-96 rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 border card-3d ${
+              selectedOccasion === 'Cocktail' ? 'border-gold-500 ring-4 ring-gold-400/40' : 'border-ivory-300'
             }`}
           >
             <img
               src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=85"
               alt="Cocktails & Tissue"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-burgundy-950 via-burgundy-950/40 to-transparent" />
-            <div className="absolute top-4 left-4">
-              <span className="p-2 rounded-full bg-gold-500/20 text-gold-300 border border-gold-400/30 backdrop-blur-md inline-block">
+            <div className="absolute top-4 left-4 card-3d-floating">
+              <span className="p-2.5 rounded-full bg-gold-500/25 text-gold-300 border border-gold-400/40 backdrop-blur-md inline-block shadow-md">
                 <Gem className="w-4 h-4" />
               </span>
             </div>
-            <div className="absolute bottom-6 left-6 right-6 text-ivory-50">
+            <div className="absolute bottom-6 left-6 right-6 text-ivory-50 card-3d-floating">
               <span className="text-[10px] font-mono uppercase tracking-widest text-gold-300 block mb-1">
                 Evening Glamour
               </span>
@@ -260,7 +251,7 @@ export const CustomerMode: React.FC = () => {
               <p className="text-xs text-ivory-200/80 mt-1.5 font-light line-clamp-2">
                 Featherweight metallic tissue, hand-embroidered borders & organza.
               </p>
-              <span className="inline-flex items-center gap-1 text-[11px] font-serif text-gold-300 mt-3 group-hover:translate-x-1 transition-transform">
+              <span className="inline-flex items-center gap-1.5 text-xs font-serif text-gold-300 font-bold mt-3 group-hover:translate-x-1.5 transition-transform">
                 <span>Explore Evening Drapes</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </span>
@@ -272,24 +263,23 @@ export const CustomerMode: React.FC = () => {
             onClick={() => {
               setSelectedCategory('all');
               setSelectedOccasion('all');
-              setFilterOwnership('bombay_owned');
               const cat = document.getElementById('saree-catalog');
               if (cat) cat.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="group relative h-96 rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-luxury-hover transition-all duration-500 border border-ivory-300"
+            className="group relative h-96 rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 border border-ivory-300 card-3d"
           >
             <img
               src="https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=85"
               alt="Loom Archive"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-burgundy-950 via-burgundy-950/40 to-transparent" />
-            <div className="absolute top-4 left-4">
-              <span className="p-2 rounded-full bg-gold-500/20 text-gold-300 border border-gold-400/30 backdrop-blur-md inline-block">
+            <div className="absolute top-4 left-4 card-3d-floating">
+              <span className="p-2.5 rounded-full bg-gold-500/25 text-gold-300 border border-gold-400/40 backdrop-blur-md inline-block shadow-md">
                 <Compass className="w-4 h-4" />
               </span>
             </div>
-            <div className="absolute bottom-6 left-6 right-6 text-ivory-50">
+            <div className="absolute bottom-6 left-6 right-6 text-ivory-50 card-3d-floating">
               <span className="text-[10px] font-mono uppercase tracking-widest text-gold-300 block mb-1">
                 Single-Loom Pieces
               </span>
@@ -297,7 +287,7 @@ export const CustomerMode: React.FC = () => {
               <p className="text-xs text-ivory-200/80 mt-1.5 font-light line-clamp-2">
                 Exclusive Bombay Saree limited productions with certified barcode ancestry.
               </p>
-              <span className="inline-flex items-center gap-1 text-[11px] font-serif text-gold-300 mt-3 group-hover:translate-x-1 transition-transform">
+              <span className="inline-flex items-center gap-1.5 text-xs font-serif text-gold-300 font-bold mt-3 group-hover:translate-x-1.5 transition-transform">
                 <span>View Vault Pieces</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </span>
@@ -306,64 +296,14 @@ export const CustomerMode: React.FC = () => {
         </div>
       </section>
 
-      {/* Featured Designer Guilds Strip */}
-      <section className="bg-gradient-to-b from-ivory-100 to-ivory-50 border-y border-ivory-300 py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <span className="text-[10px] uppercase font-serif tracking-[0.2em] font-bold text-gold-800 block">
-                Direct From Master Looms & Guilds
-              </span>
-              <h3 className="font-serif text-xl sm:text-2xl font-normal text-burgundy-950">
-                Partner Ateliers & Designer Collectives
-              </h3>
-            </div>
-            <span className="text-xs text-charcoal-500 font-light max-w-sm sm:text-right">
-              Centrally cataloged & physically authenticated at our Kala Ghoda studio.
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {designers.map((d) => (
-              <div
-                key={d.id}
-                onClick={() => {
-                  setSearchQuery(d.brand_name);
-                  const cat = document.getElementById('saree-catalog');
-                  if (cat) cat.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="bg-white p-4 rounded-xl border border-ivory-300 hover:border-gold-500/60 shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-3.5 cursor-pointer group"
-              >
-                <img
-                  src={d.logo_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
-                  alt={d.brand_name}
-                  className="w-12 h-12 rounded-full object-cover flex-shrink-0 border border-ivory-300 group-hover:border-gold-500 transition-colors"
-                />
-                <div className="overflow-hidden">
-                  <h4 className="font-serif font-bold text-sm text-charcoal-900 group-hover:text-burgundy-900 transition-colors truncate">
-                    {d.brand_name}
-                  </h4>
-                  <span className="text-[11px] text-charcoal-500 truncate block font-light">
-                    {d.city} Atelier
-                  </span>
-                  <span className="text-[10px] text-gold-700 font-mono font-medium block mt-0.5">
-                    View Catalog →
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Main Saree Product Catalog */}
       <main id="saree-catalog" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
-        {/* Controls & Filter Bar */}
+        {/* Minimalist Controls & Filter Bar */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-ivory-300 mb-8">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono uppercase tracking-widest text-gold-700 font-bold">
-                Couture Inventory
+                Studio Vault
               </span>
               {selectedOccasion !== 'all' && (
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-serif bg-burgundy-900 text-gold-200">
@@ -384,36 +324,25 @@ export const CustomerMode: React.FC = () => {
             {selectedOccasion !== 'all' && (
               <button
                 onClick={() => setSelectedOccasion('all')}
-                className="px-3 py-1.5 rounded-lg bg-burgundy-100 text-burgundy-900 hover:bg-burgundy-200 font-medium transition"
+                className="px-3.5 py-2 rounded-xl bg-burgundy-100 text-burgundy-900 hover:bg-burgundy-200 font-medium transition"
               >
                 Clear Occasion (✕)
               </button>
             )}
 
-            {/* Filter Ownership */}
-            <select
-              value={filterOwnership}
-              onChange={(e) => setFilterOwnership(e.target.value as any)}
-              className="bg-white border border-ivory-300 rounded-lg px-3.5 py-2 font-serif font-medium text-charcoal-800 focus:outline-none focus:ring-1 focus:ring-burgundy-800 shadow-sm"
-            >
-              <option value="all">All Ownership Types</option>
-              <option value="designer_consignment">Designer Consignment</option>
-              <option value="bombay_owned">Bombay Studio Exclusive</option>
-            </select>
-
             {/* In-Stock Filter */}
-            <label className="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-ivory-300 bg-white cursor-pointer select-none shadow-sm hover:border-gold-500 transition">
+            <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-ivory-300 bg-white cursor-pointer select-none shadow-sm hover:border-gold-500 transition">
               <input
                 type="checkbox"
                 checked={filterInStockOnly}
                 onChange={(e) => setFilterInStockOnly(e.target.checked)}
                 className="text-burgundy-900 rounded focus:ring-burgundy-900 accent-burgundy-900"
               />
-              <span className="font-serif">In Stock Only</span>
+              <span className="font-serif font-medium">In Stock Only</span>
             </label>
 
             {/* Sorting */}
-            <div className="flex items-center gap-1.5 bg-white border border-ivory-300 rounded-lg px-3 py-2 shadow-sm">
+            <div className="flex items-center gap-1.5 bg-white border border-ivory-300 rounded-xl px-3.5 py-2 shadow-sm">
               <ArrowUpDown className="w-3.5 h-3.5 text-gold-700" />
               <select
                 value={sortBy}
@@ -428,9 +357,9 @@ export const CustomerMode: React.FC = () => {
           </div>
         </div>
 
-        {/* Product Cards Grid */}
+        {/* 3D Product Cards Grid */}
         {filtered.length === 0 ? (
-          <div className="text-center py-20 space-y-4 bg-white rounded-2xl border border-ivory-300 p-8">
+          <div className="text-center py-20 space-y-4 bg-white rounded-3xl border border-ivory-300 p-8 shadow-sm">
             <Sparkles className="w-10 h-10 mx-auto text-gold-500" />
             <h3 className="font-serif text-xl font-bold text-charcoal-800">
               No sarees match your filter criteria
@@ -443,10 +372,9 @@ export const CustomerMode: React.FC = () => {
                 setSearchQuery('');
                 setSelectedCategory('all');
                 setSelectedOccasion('all');
-                setFilterOwnership('all');
                 setFilterInStockOnly(false);
               }}
-              className="mt-2 px-6 py-2.5 rounded-full bg-burgundy-950 text-gold-300 text-xs font-serif font-semibold hover:bg-burgundy-900 transition shadow-md"
+              className="btn-3d-burgundy mt-2 px-6 py-2.5 rounded-full text-xs font-serif font-semibold"
             >
               Reset All Filters
             </button>
@@ -487,17 +415,17 @@ export const CustomerMode: React.FC = () => {
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                <div className="p-4 rounded-xl bg-burgundy-950/60 border border-gold-500/20">
+                <div className="p-4 rounded-2xl bg-burgundy-950/60 border border-gold-500/20 card-3d">
                   <Crown className="w-5 h-5 text-gold-400 mb-2" />
                   <h4 className="font-serif font-bold text-sm text-ivory-100">Private Salon</h4>
                   <p className="text-xs text-ivory-300/80 mt-1">One-on-one bridal trousseau consultations with master stylists.</p>
                 </div>
-                <div className="p-4 rounded-xl bg-burgundy-950/60 border border-gold-500/20">
+                <div className="p-4 rounded-2xl bg-burgundy-950/60 border border-gold-500/20 card-3d">
                   <Award className="w-5 h-5 text-gold-400 mb-2" />
                   <h4 className="font-serif font-bold text-sm text-ivory-100">Govt. Silk Mark</h4>
                   <p className="text-xs text-ivory-300/80 mt-1">Laboratory certified 100% pure silk and genuine zari verification.</p>
                 </div>
-                <div className="p-4 rounded-xl bg-burgundy-950/60 border border-gold-500/20">
+                <div className="p-4 rounded-2xl bg-burgundy-950/60 border border-gold-500/20 card-3d">
                   <ShieldCheck className="w-5 h-5 text-gold-400 mb-2" />
                   <h4 className="font-serif font-bold text-sm text-ivory-100">Single Barcode</h4>
                   <p className="text-xs text-ivory-300/80 mt-1">Individual physical inventory tracing prevents duplicates or counterfeits.</p>
@@ -517,15 +445,15 @@ export const CustomerMode: React.FC = () => {
             </div>
 
             {/* Studio visual feature */}
-            <div className="lg:col-span-5 relative flex justify-center">
-              <div className="relative w-80 sm:w-96 h-[460px] rounded-2xl overflow-hidden shadow-2xl border-2 border-gold-500/40">
+            <div className="lg:col-span-5 relative flex justify-center preserve-3d">
+              <div className="relative w-80 sm:w-96 h-[460px] rounded-3xl overflow-hidden shadow-2xl border-2 border-gold-500/40 card-3d">
                 <img
                   src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=85"
                   alt="Kala Ghoda Studio Experience"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-charcoal-950/90 via-transparent to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6 p-4 rounded-xl bg-charcoal-900/90 backdrop-blur-md border border-gold-500/30 text-left">
+                <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl glass-3d-dark border border-gold-500/30 text-left card-3d-floating">
                   <span className="text-[10px] uppercase font-mono font-bold text-gold-400 tracking-wider block">
                     Private Bridal Consultation
                   </span>
@@ -545,7 +473,7 @@ export const CustomerMode: React.FC = () => {
       {/* Customer Wishlist Drawer Modal */}
       {isWishlistOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-ivory-300 overflow-hidden flex flex-col max-h-[85vh]">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full border border-ivory-300 overflow-hidden flex flex-col max-h-[85vh]">
             <div className="bg-burgundy-950 text-ivory-50 px-6 py-4 flex items-center justify-between border-b border-gold-600/30">
               <div className="flex items-center gap-2">
                 <Heart className="w-5 h-5 text-gold-400 fill-gold-400" />
@@ -569,7 +497,7 @@ export const CustomerMode: React.FC = () => {
                 wishlistItems.map((w) => (
                   <div
                     key={w.id}
-                    className="p-3 bg-ivory-50 rounded-xl border border-ivory-300 flex items-center justify-between gap-3"
+                    className="p-3 bg-ivory-50 rounded-2xl border border-ivory-300 flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3">
                       <img
@@ -579,7 +507,7 @@ export const CustomerMode: React.FC = () => {
                           const target = e.currentTarget;
                           if (target.src !== FALLBACK_SAREE_IMAGE) target.src = FALLBACK_SAREE_IMAGE;
                         }}
-                        className="w-14 h-18 object-cover rounded-lg"
+                        className="w-14 h-18 object-cover rounded-xl"
                       />
                       <div>
                         <h4 className="font-serif font-bold text-charcoal-900">{w.product?.name}</h4>
@@ -596,7 +524,7 @@ export const CustomerMode: React.FC = () => {
                           if (w.product) setSelectedProduct(w.product);
                           setIsWishlistOpen(false);
                         }}
-                        className="px-3 py-1.5 rounded-lg bg-burgundy-900 text-gold-300 font-semibold text-xs hover:bg-burgundy-950 transition"
+                        className="btn-3d-burgundy px-3 py-1.5 rounded-xl text-xs font-serif font-bold"
                       >
                         View Drape
                       </button>
@@ -678,7 +606,7 @@ export const CustomerMode: React.FC = () => {
                 BOMBAY SAREE
               </span>
               <p className="text-charcoal-400 font-light leading-relaxed">
-                Omnichannel saree studio & curated designer marketplace. Preserving India’s finest master weavers and artisanal silks through certified barcode provenance.
+                Omnichannel saree studio & master handloom atelier. Preserving India’s finest master weavers and artisanal silks through certified barcode provenance.
               </p>
               <div className="flex items-center gap-2 text-gold-400 font-medium pt-1">
                 <Award className="w-4 h-4" />
@@ -772,15 +700,15 @@ export const CustomerMode: React.FC = () => {
                 Atelier Privileges
               </h4>
               <p className="text-charcoal-400 font-light leading-relaxed">
-                Receive private previews of limited edition loom drapes and festive designer spotlights.
+                Receive private previews of limited edition loom drapes and festive studio spotlights.
               </p>
               <div className="flex gap-2">
                 <input
                   type="email"
                   placeholder="Enter email address..."
-                  className="bg-charcoal-900 border border-charcoal-800 rounded-lg px-3 py-2 text-xs text-ivory-100 focus:outline-none focus:border-gold-500 w-full"
+                  className="bg-charcoal-900 border border-charcoal-800 rounded-xl px-3 py-2 text-xs text-ivory-100 focus:outline-none focus:border-gold-500 w-full"
                 />
-                <button className="px-4 py-2 rounded-lg bg-burgundy-900 text-gold-300 font-serif font-semibold hover:bg-burgundy-800 transition">
+                <button className="btn-3d-burgundy px-4 py-2 rounded-xl font-serif font-semibold text-xs border border-gold-500/30">
                   Join
                 </button>
               </div>
@@ -796,7 +724,7 @@ export const CustomerMode: React.FC = () => {
                 className="hover:text-gold-400 text-charcoal-500 transition text-[10px] tracking-wider uppercase font-sans flex items-center gap-1"
               >
                 <KeyRound className="w-3 h-3 text-gold-600" />
-                <span>Staff & Partner Portal</span>
+                <span>Staff & Admin Portal</span>
               </button>
               <span className="text-charcoal-700">•</span>
               <p>GSTIN: 27AABCB9821M1ZX | HSN 5007 Pure Silk Sarees</p>

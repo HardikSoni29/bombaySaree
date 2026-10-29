@@ -2,18 +2,12 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   X,
-  ShoppingBag,
-  Palette,
   Store,
   ShieldCheck,
   Sparkles,
-  ArrowRight,
-  CheckCircle2,
   Lock,
   Mail,
   User,
-  Phone,
-  Building,
   KeyRound,
   AlertCircle,
   ArrowLeft,
@@ -22,7 +16,7 @@ import {
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialTab?: 'customer' | 'designer' | 'staff' | 'admin';
+  initialTab?: 'customer' | 'staff' | 'admin';
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -32,18 +26,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const {
     loginAsCustomer,
-    loginAsDesigner,
-    applyAsDesigner,
     loginAsStaff,
     loginAsAdmin,
     loginWithGoogle,
-    allDesigners,
   } = useAuth();
 
-  // If initialTab is staff/designer/admin, open in partner gateway mode; otherwise pure customer mode
+  // If initialTab is staff/admin, open in partner gateway mode; otherwise pure customer mode
   const [isPartnerGateway, setIsPartnerGateway] = useState<boolean>(initialTab !== 'customer');
-  const [partnerTab, setPartnerTab] = useState<'staff' | 'designer' | 'admin'>(
-    initialTab === 'customer' ? 'staff' : initialTab
+  const [partnerTab, setPartnerTab] = useState<'staff' | 'admin'>(
+    initialTab === 'admin' ? 'admin' : 'staff'
   );
 
   // Customer Form State
@@ -51,19 +42,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [custEmail, setCustEmail] = useState('');
   const [custPassword, setCustPassword] = useState('');
   const [custName, setCustName] = useState('');
-
-  // Designer Form State
-  const [designerAction, setDesignerAction] = useState<'login' | 'apply'>('login');
-  const [brandName, setBrandName] = useState('');
-  const [contactPerson, setContactPerson] = useState('');
-  const [designerEmail, setDesignerEmail] = useState('');
-  const [designerPhone, setDesignerPhone] = useState('');
-  const [city, setCity] = useState('Mumbai');
-  const [state, setState] = useState('Maharashtra');
-  const [brandStory, setBrandStory] = useState('');
-  const [selectedExistingDesigner, setSelectedExistingDesigner] = useState<string>(
-    allDesigners[0]?.id || ''
-  );
 
   // Staff POS PIN State
   const [staffPin, setStaffPin] = useState('4567');
@@ -83,39 +61,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       name: custName || 'Priya Mehta',
     });
     onClose();
-  };
-
-  // Handle Designer Application Submit
-  const handleDesignerApply = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!brandName.trim()) {
-      alert('Please enter your Brand / Atelier name');
-      return;
-    }
-
-    applyAsDesigner({
-      brand_name: brandName,
-      contact_person: contactPerson || 'Designer Lead',
-      email: designerEmail || 'atelier@designer.com',
-      phone: designerPhone || '+91 98000 12345',
-      city,
-      state,
-      business_address: `${city}, ${state}`,
-      brand_story: brandStory || 'Luxury handloom drapes crafted with traditional artisans.',
-      default_commission_rate: 0.28,
-      approval_status: 'pending',
-    });
-
-    onClose();
-  };
-
-  // Handle Designer Existing Login
-  const handleDesignerLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedExistingDesigner) {
-      loginAsDesigner(selectedExistingDesigner);
-      onClose();
-    }
   };
 
   // Handle Staff PIN
@@ -143,7 +88,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/75 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/75 backdrop-blur-md animate-fadeIn">
       <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-gold-500/30 flex flex-col max-h-[92vh]">
         {/* Modal Header: 30% Royal Burgundy */}
         <div className="bg-gradient-to-r from-burgundy-950 via-burgundy-900 to-burgundy-950 p-6 text-white relative border-b border-gold-500/30">
@@ -165,11 +110,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 {customerMode === 'signin' ? 'Sign In to Your Account' : 'Create Customer Account'}
               </h3>
               <p className="text-xs text-ivory-200/80 font-light mt-0.5">
-                Access curated bridal trousseaus, wishlist heloirloms & track studio orders.
+                Access curated bridal trousseaus, wishlist heirlooms & track studio orders.
               </p>
             </div>
           ) : (
-            /* Staff / Partner Gateway Header */
+            /* Staff / Admin Gateway Header */
             <div>
               <button
                 onClick={() => setIsPartnerGateway(false)}
@@ -179,14 +124,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <span>Back to Customer Store</span>
               </button>
               <h3 className="font-serif text-2xl font-bold text-ivory-50">
-                Studio Staff & Partner Portal
+                Studio Staff & Admin Portal
               </h3>
               <p className="text-xs text-ivory-200/80 font-light mt-0.5">
-                Restricted access for Kala Ghoda store staff, consignment designers & studio administrators.
+                Restricted access for Kala Ghoda store cashiers and studio administrators.
               </p>
 
-              {/* Partner Tabs */}
-              <div className="grid grid-cols-3 gap-1.5 mt-4 bg-charcoal-950/60 p-1.5 rounded-2xl border border-gold-500/20 text-xs">
+              {/* Partner Tabs: POS & Admin Only */}
+              <div className="grid grid-cols-2 gap-2 mt-4 bg-charcoal-950/60 p-1.5 rounded-2xl border border-gold-500/20 text-xs">
                 <button
                   type="button"
                   onClick={() => setPartnerTab('staff')}
@@ -197,20 +142,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   }`}
                 >
                   <Store className="w-3.5 h-3.5" />
-                  <span>Store POS</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPartnerTab('designer')}
-                  className={`py-2 rounded-xl font-medium transition flex items-center justify-center gap-1.5 ${
-                    partnerTab === 'designer'
-                      ? 'bg-gold-500 text-burgundy-950 font-bold shadow-md'
-                      : 'text-ivory-300 hover:text-white'
-                  }`}
-                >
-                  <Palette className="w-3.5 h-3.5" />
-                  <span>Designer</span>
+                  <span>Store POS Register</span>
                 </button>
 
                 <button
@@ -223,7 +155,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   }`}
                 >
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Admin</span>
+                  <span>Admin Studio</span>
                 </button>
               </div>
             </div>
@@ -244,7 +176,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   onClose();
                 }}
                 type="button"
-                className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl border border-ivory-300 bg-white hover:bg-ivory-100 text-charcoal-800 font-semibold text-xs transition shadow-sm"
+                className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl border border-ivory-300 bg-white hover:bg-ivory-100 text-charcoal-800 font-semibold text-xs transition shadow-sm hover:scale-[1.01]"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path
@@ -327,10 +259,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </div>
                 </div>
 
-                {/* 10% Gold CTA Button */}
+                {/* 3D Tactile CTA Button */}
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-burgundy-950 font-serif font-bold text-xs tracking-wider shadow-md transition"
+                  className="btn-3d-gold w-full py-3.5 rounded-2xl font-serif font-bold text-xs tracking-wider"
                 >
                   {customerMode === 'signin' ? 'Sign In as Shopper' : 'Create Boutique Account'}
                 </button>
@@ -361,7 +293,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 )}
               </div>
 
-              {/* Discreet Staff & Partner Gateway Link */}
+              {/* Discreet Staff & Admin Gateway Link */}
               <div className="pt-4 border-t border-ivory-300 text-center">
                 <button
                   type="button"
@@ -369,7 +301,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   className="text-[11px] text-charcoal-500 hover:text-burgundy-900 transition flex items-center justify-center gap-1 mx-auto font-medium"
                 >
                   <KeyRound className="w-3.5 h-3.5 text-gold-600" />
-                  <span>Store Staff, Designer or Studio Admin? Enter Partner Gateway →</span>
+                  <span>Store Staff or Studio Admin? Enter Gateway →</span>
                 </button>
               </div>
             </div>
@@ -380,7 +312,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* ========================================================================= */}
           {isPartnerGateway && partnerTab === 'staff' && (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-ivory-100 border border-ivory-300 text-xs space-y-1">
+              <div className="p-4 rounded-2xl bg-ivory-100 border border-ivory-300 text-xs space-y-1">
                 <div className="flex items-center gap-2 font-serif font-bold text-burgundy-950">
                   <Store className="w-4 h-4 text-gold-600" />
                   <span>Kala Ghoda Studio Register #1</span>
@@ -411,13 +343,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={staffPin}
                     onChange={(e) => setStaffPin(e.target.value)}
                     placeholder="Enter PIN (4567)"
-                    className="w-full bg-white border border-ivory-300 rounded-xl py-3 px-4 text-center text-xl tracking-[0.4em] font-mono font-bold text-burgundy-950 focus:outline-none focus:ring-2 focus:ring-burgundy-900 shadow-sm"
+                    className="w-full bg-white border border-ivory-300 rounded-2xl py-3 px-4 text-center text-xl tracking-[0.4em] font-mono font-bold text-burgundy-950 focus:outline-none focus:ring-2 focus:ring-burgundy-900 shadow-sm"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-300 font-serif font-bold text-xs tracking-wider shadow-md transition"
+                  className="btn-3d-burgundy w-full py-3.5 rounded-2xl font-serif font-bold text-xs tracking-wider"
                 >
                   Unlock POS Terminal
                 </button>
@@ -426,171 +358,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
 
           {/* ========================================================================= */}
-          {/* PARTNER GATEWAY: DESIGNER CONSIGNMENT */}
-          {/* ========================================================================= */}
-          {isPartnerGateway && partnerTab === 'designer' && (
-            <div className="space-y-4">
-              <div className="flex rounded-xl bg-ivory-200 p-1 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setDesignerAction('login')}
-                  className={`flex-1 py-1.5 rounded-lg font-serif font-bold transition ${
-                    designerAction === 'login'
-                      ? 'bg-white text-burgundy-950 shadow-sm'
-                      : 'text-charcoal-600 hover:text-charcoal-900'
-                  }`}
-                >
-                  Existing Partner Login
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDesignerAction('apply')}
-                  className={`flex-1 py-1.5 rounded-lg font-serif font-bold transition ${
-                    designerAction === 'apply'
-                      ? 'bg-white text-burgundy-950 shadow-sm'
-                      : 'text-charcoal-600 hover:text-charcoal-900'
-                  }`}
-                >
-                  Apply as New Designer
-                </button>
-              </div>
-
-              {designerAction === 'login' ? (
-                <form onSubmit={handleDesignerLogin} className="space-y-3.5">
-                  <div>
-                    <label className="text-[11px] font-mono uppercase tracking-wider text-charcoal-600 block mb-1 font-semibold">
-                      Select Approved Atelier Brand:
-                    </label>
-                    <select
-                      value={selectedExistingDesigner}
-                      onChange={(e) => setSelectedExistingDesigner(e.target.value)}
-                      className="w-full bg-white border border-ivory-300 rounded-xl py-2.5 px-3 text-xs text-charcoal-900 font-serif font-semibold focus:outline-none focus:ring-1 focus:ring-burgundy-900"
-                    >
-                      {allDesigners.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.brand_name} ({d.city}) — {Math.round(d.default_commission_rate * 100)}% Consignment
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-3.5 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-300 font-serif font-bold text-xs tracking-wider shadow-md transition"
-                  >
-                    Open Designer Dashboard
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleDesignerApply} className="space-y-3 text-xs">
-                  <div>
-                    <label className="font-mono text-[10px] uppercase text-charcoal-600 block mb-1">
-                      Brand / Studio Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={brandName}
-                      onChange={(e) => setBrandName(e.target.value)}
-                      placeholder="e.g. Maya Banaras Loom"
-                      className="w-full bg-white border border-ivory-300 rounded-xl py-2 px-3 text-xs"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="font-mono text-[10px] uppercase text-charcoal-600 block mb-1">
-                        Contact Person
-                      </label>
-                      <input
-                        type="text"
-                        value={contactPerson}
-                        onChange={(e) => setContactPerson(e.target.value)}
-                        placeholder="Lead Designer"
-                        className="w-full bg-white border border-ivory-300 rounded-xl py-2 px-3 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-mono text-[10px] uppercase text-charcoal-600 block mb-1">
-                        Atelier City
-                      </label>
-                      <input
-                        type="text"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        placeholder="Varanasi / Jaipur"
-                        className="w-full bg-white border border-ivory-300 rounded-xl py-2 px-3 text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="font-mono text-[10px] uppercase text-charcoal-600 block mb-1">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        value={designerEmail}
-                        onChange={(e) => setDesignerEmail(e.target.value)}
-                        placeholder="atelier@domain.com"
-                        className="w-full bg-white border border-ivory-300 rounded-xl py-2 px-3 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-mono text-[10px] uppercase text-charcoal-600 block mb-1">
-                        Phone
-                      </label>
-                      <input
-                        type="tel"
-                        value={designerPhone}
-                        onChange={(e) => setDesignerPhone(e.target.value)}
-                        placeholder="+91 98000 00000"
-                        className="w-full bg-white border border-ivory-300 rounded-xl py-2 px-3 text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="font-mono text-[10px] uppercase text-charcoal-600 block mb-1">
-                      Weaving Heritage & Brand Story
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={brandStory}
-                      onChange={(e) => setBrandStory(e.target.value)}
-                      placeholder="Specialization in hand-loomed kadwa zari..."
-                      className="w-full bg-white border border-ivory-300 rounded-xl py-2 px-3 text-xs"
-                    />
-                  </div>
-
-                  <div className="p-2.5 rounded-lg bg-gold-50 border border-gold-300 text-[11px] text-gold-900 leading-relaxed font-light">
-                    * Applications enter a <strong>Pending Approval</strong> state until verified by Bombay Saree Executive Administration.
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-burgundy-950 font-serif font-bold text-xs shadow-md"
-                  >
-                    Submit Consignment Application
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-
-          {/* ========================================================================= */}
           {/* PARTNER GATEWAY: EXECUTIVE ADMIN */}
           {/* ========================================================================= */}
           {isPartnerGateway && partnerTab === 'admin' && (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-ivory-100 border border-ivory-300 text-xs space-y-1">
+              <div className="p-4 rounded-2xl bg-ivory-100 border border-ivory-300 text-xs space-y-1">
                 <div className="flex items-center gap-2 font-serif font-bold text-burgundy-950">
                   <ShieldCheck className="w-4 h-4 text-gold-600" />
-                  <span>Executive Omnichannel Studio Control</span>
+                  <span>Executive Studio Administration</span>
                 </div>
                 <p className="text-charcoal-600 font-light">
-                  Full executive control over inventory barcodes, designer commissions & approval, POS audit logs, and studio reports.
+                  Direct access to upload new saree designs, issue certified barcodes, and oversee store POS transactions.
                 </p>
                 <div className="text-[11px] font-mono text-gold-800 pt-1 font-semibold">
                   Demo Passcode: <span className="underline">admin123</span>
@@ -614,13 +392,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={adminPasscode}
                     onChange={(e) => setAdminPasscode(e.target.value)}
                     placeholder="Enter admin passcode (admin123)"
-                    className="w-full bg-white border border-ivory-300 rounded-xl py-3 px-4 text-xs font-mono text-burgundy-950 focus:outline-none focus:ring-2 focus:ring-burgundy-900 shadow-sm"
+                    className="w-full bg-white border border-ivory-300 rounded-2xl py-3 px-4 text-xs font-mono text-burgundy-950 focus:outline-none focus:ring-2 focus:ring-burgundy-900 shadow-sm"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-300 font-serif font-bold text-xs tracking-wider shadow-md transition"
+                  className="btn-3d-burgundy w-full py-3.5 rounded-2xl font-serif font-bold text-xs tracking-wider"
                 >
                   Enter Executive Studio
                 </button>

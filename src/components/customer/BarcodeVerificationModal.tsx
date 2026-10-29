@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   ShoppingBag,
   Eye,
-  Printer,
   Sparkles,
   MapPin,
   Tag,
@@ -135,17 +134,17 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/75 backdrop-blur-sm animate-fadeIn overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-xl w-full border border-gold-500/30 overflow-hidden flex flex-col my-8 max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/80 backdrop-blur-md animate-fadeIn overflow-y-auto perspective-1000">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-xl w-full border border-gold-500/40 overflow-hidden flex flex-col my-8 max-h-[92vh] card-3d">
         {/* Modal Header: 30% Royal Burgundy */}
-        <div className="bg-gradient-to-r from-burgundy-950 via-burgundy-900 to-burgundy-950 px-6 py-5 text-white flex items-center justify-between border-b border-gold-500/30">
+        <div className="bg-gradient-to-r from-burgundy-950 via-burgundy-900 to-burgundy-950 px-6 py-5 text-white flex items-center justify-between border-b border-gold-500/40">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gold-500/20 text-gold-300 border border-gold-400/30">
+            <div className="p-2.5 rounded-2xl bg-gold-500/25 text-gold-300 border border-gold-400/40 shadow-md">
               <Barcode className="w-5 h-5 text-gold-400" />
             </div>
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-gold-400 font-bold block">
-                Omnichannel Authentication
+              <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-gold-400 font-bold block">
+                Physical Studio Authentication
               </span>
               <h3 className="font-serif text-xl font-bold text-ivory-50 leading-tight">
                 Saree Barcode & Provenance Verifier
@@ -157,7 +156,7 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
               stopCamera();
               onClose();
             }}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-ivory-200 transition"
+            className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-ivory-200 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -167,12 +166,12 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
         <div className="p-6 overflow-y-auto space-y-6 bg-[#FAF8F5]">
           {/* Instructions */}
           <p className="text-xs text-charcoal-600 font-light leading-relaxed">
-            Every physical saree in our Kala Ghoda flagship studio carries an individual Code 128 barcode tag. Scan the tag using your camera or enter the barcode below to inspect weave ancestry, Govt. Silk Mark authenticity, and single-loom provenance.
+            Every physical drape in our Kala Ghoda studio vault carries an individual Code 128 barcode tag. Scan with your device camera or enter the barcode below to inspect weave ancestry, pure gold zari verification, and single-loom physical provenance.
           </p>
 
-          {/* Camera Scanner Viewfinder */}
+          {/* 3D Holographic Camera Scanner Viewfinder */}
           {isCameraActive ? (
-            <div className="relative rounded-2xl overflow-hidden bg-charcoal-950 border-2 border-gold-500 aspect-video flex items-center justify-center shadow-inner">
+            <div className="relative rounded-2xl overflow-hidden bg-charcoal-950 border-2 border-gold-500 aspect-video flex items-center justify-center shadow-2xl">
               <video
                 ref={videoRef}
                 autoPlay
@@ -180,14 +179,14 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
                 muted
                 className="w-full h-full object-cover"
               />
-              {/* Laser Reticle */}
-              <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-0.5 bg-red-500 shadow-[0_0_12px_#ef4444] animate-pulse" />
-              <div className="absolute top-3 left-3 bg-charcoal-900/80 text-gold-300 text-[10px] font-mono px-2.5 py-1 rounded-full border border-gold-500/40">
-                Align physical barcode in center
+              {/* Holographic 3D Laser Reticle */}
+              <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-0.5 bg-red-500 shadow-[0_0_15px_#ef4444] animate-pulse" />
+              <div className="absolute top-3 left-3 bg-charcoal-900/90 text-gold-300 text-[10px] font-mono px-3 py-1 rounded-full border border-gold-500/50 shadow-md">
+                Align physical barcode inside reticle
               </div>
               <button
                 onClick={stopCamera}
-                className="absolute bottom-3 right-3 px-3 py-1 bg-white/90 text-charcoal-900 rounded-lg text-xs font-semibold hover:bg-white transition"
+                className="absolute bottom-3 right-3 px-3.5 py-1.5 bg-white/95 text-charcoal-900 rounded-xl text-xs font-semibold hover:bg-white transition shadow-md"
               >
                 Close Camera
               </button>
@@ -196,9 +195,9 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
             <div className="flex gap-2">
               <button
                 onClick={startCamera}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-ivory-100 hover:bg-ivory-200 text-burgundy-950 font-serif text-xs font-semibold border border-ivory-300 transition shadow-sm w-full"
+                className="btn-3d-burgundy flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-serif text-xs font-bold w-full border border-gold-500/30"
               >
-                <Camera className="w-4 h-4 text-burgundy-900" />
+                <Camera className="w-4 h-4 text-gold-400" />
                 <span>Open Device Camera Scanner</span>
               </button>
             </div>
@@ -217,15 +216,15 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
                 type="text"
                 value={barcodeInput}
                 onChange={(e) => setBarcodeInput(e.target.value)}
-                placeholder="Enter Barcode (e.g., BS-KAN-001)..."
-                className="w-full bg-white border border-ivory-300 rounded-xl py-3 pl-10 pr-4 text-xs font-mono font-medium text-charcoal-900 placeholder-charcoal-400 focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500 shadow-sm"
+                placeholder="Enter Barcode Tag (e.g., BS-KAN-001)..."
+                className="w-full bg-white border border-ivory-300 rounded-2xl py-3 pl-10 pr-4 text-xs font-mono font-bold text-charcoal-900 placeholder-charcoal-400 focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500 shadow-sm"
               />
               <Search className="w-4 h-4 text-charcoal-400 absolute left-3.5 top-3.5" />
             </div>
-            {/* 10% Gold Accent CTA */}
+            {/* 10% Gold Accent 3D Button */}
             <button
               type="submit"
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-burgundy-950 font-serif font-bold text-xs tracking-wider shadow-md transition"
+              className="btn-3d-gold px-7 py-3 rounded-2xl font-serif font-bold text-xs tracking-wider"
             >
               Verify
             </button>
@@ -234,7 +233,7 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
           {/* Quick Demo Barcode Pills */}
           <div>
             <span className="text-[10px] font-mono uppercase tracking-wider text-charcoal-500 block mb-2 font-semibold">
-              Tap to Test In-Store Barcodes:
+              Sample Vault Barcodes:
             </span>
             <div className="flex flex-wrap gap-2">
               {sampleBarcodes.map((item) => (
@@ -242,7 +241,7 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
                   key={item.id}
                   type="button"
                   onClick={() => handleSimulateScan(item.barcode)}
-                  className="px-2.5 py-1 rounded-lg bg-white border border-ivory-300 hover:border-gold-500 text-[11px] font-mono text-charcoal-700 hover:text-burgundy-900 transition shadow-2xs flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-xl bg-white border border-ivory-300 hover:border-gold-500 text-[11px] font-mono font-bold text-charcoal-800 hover:text-burgundy-900 transition shadow-2xs flex items-center gap-1.5"
                 >
                   <Tag className="w-3 h-3 text-gold-600" />
                   <span>{item.barcode}</span>
@@ -253,27 +252,27 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
 
           {/* Verification Error */}
           {verificationError && (
-            <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2.5">
+            <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2.5 shadow-sm">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
               <span>{verificationError}</span>
             </div>
           )}
 
-          {/* Verified Piece Provenance Card */}
+          {/* 3D Verified Piece Provenance Certificate Card */}
           {verifiedItem && verifiedItem.product && (
-            <div className="bg-white rounded-2xl border-2 border-gold-500/50 p-5 shadow-luxury space-y-4 animate-fadeIn">
+            <div className="bg-white rounded-3xl border-2 border-gold-500/60 p-6 shadow-luxury space-y-4 animate-fadeIn card-3d">
               {/* Seal Banner */}
               <div className="flex items-center justify-between pb-3 border-b border-ivory-200">
                 <div className="flex items-center gap-2 text-emerald-800 font-semibold text-xs">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Certified Studio Piece Verified</span>
+                  <span>Certified Single-Loom Studio Piece</span>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-serif font-bold bg-gold-500/20 text-gold-800 border border-gold-400/40 uppercase tracking-wider">
+                <span className="px-3 py-1 rounded-full text-[10px] font-serif font-bold bg-gold-500/20 text-gold-900 border border-gold-400/40 uppercase tracking-wider shadow-sm">
                   Silk Mark Genuine
                 </span>
               </div>
 
-              {/* Product Info */}
+              {/* Product Info with 3D Depth */}
               <div className="flex gap-4 items-start">
                 <img
                   src={getProductImage(verifiedItem.product)}
@@ -282,17 +281,17 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
                     const t = e.currentTarget;
                     if (t.src !== FALLBACK_SAREE_IMAGE) t.src = FALLBACK_SAREE_IMAGE;
                   }}
-                  className="w-20 h-24 object-cover rounded-xl shadow-sm border border-ivory-200 flex-shrink-0"
+                  className="w-20 h-24 object-cover rounded-2xl shadow-md border border-ivory-200 flex-shrink-0"
                 />
                 <div className="flex-1">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-gold-700 font-semibold block">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-gold-700 font-bold block">
                     {verifiedItem.product.fabric} • {verifiedItem.product.occasion}
                   </span>
                   <h4 className="font-serif text-base font-bold text-burgundy-950 mt-0.5 leading-snug">
                     {verifiedItem.product.name}
                   </h4>
                   <div className="flex items-baseline gap-2 mt-1">
-                    <span className="font-serif text-lg font-bold text-burgundy-950">
+                    <span className="font-serif text-xl font-bold text-burgundy-950">
                       {formatINR(verifiedItem.product.price)}
                     </span>
                     <span className="text-xs text-charcoal-400 line-through">
@@ -303,46 +302,44 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
               </div>
 
               {/* Scannable Barcode SVG */}
-              <div className="p-3 bg-[#FAF8F5] rounded-xl border border-ivory-200 flex flex-col items-center justify-center">
+              <div className="p-4 bg-[#FAF8F5] rounded-2xl border border-ivory-200 flex flex-col items-center justify-center shadow-inner">
                 <svg ref={svgRef} className="max-w-full" />
-                <span className="text-[10px] text-charcoal-500 font-mono mt-1">
-                  Code 128 Studio Physical Tag
+                <span className="text-[10px] text-charcoal-500 font-mono mt-1 font-semibold">
+                  Code 128 Studio Physical Tag • Piece ID: {verifiedItem.id}
                 </span>
               </div>
 
               {/* Loom Details & Location */}
-              <div className="grid grid-cols-2 gap-2.5 text-[11px] font-sans">
-                <div className="p-2.5 bg-ivory-50 rounded-lg border border-ivory-200">
-                  <span className="text-charcoal-400 text-[10px] block font-mono">Location Vault</span>
-                  <span className="font-semibold text-charcoal-800 flex items-center gap-1 mt-0.5">
-                    <MapPin className="w-3 h-3 text-burgundy-800" />
-                    <span>{verifiedItem.location?.name || 'Kala Ghoda Studio'}</span>
+              <div className="grid grid-cols-2 gap-3 text-[11px] font-sans">
+                <div className="p-3 bg-ivory-50 rounded-xl border border-ivory-200">
+                  <span className="text-charcoal-400 text-[10px] block font-mono">Vault Location</span>
+                  <span className="font-serif font-bold text-charcoal-900 flex items-center gap-1.5 mt-0.5">
+                    <MapPin className="w-3.5 h-3.5 text-burgundy-800" />
+                    <span>{verifiedItem.location?.name || 'Kala Ghoda Studio Vault'}</span>
                   </span>
                 </div>
-                <div className="p-2.5 bg-ivory-50 rounded-lg border border-ivory-200">
-                  <span className="text-charcoal-400 text-[10px] block font-mono">Provenance Type</span>
-                  <span className="font-semibold text-charcoal-800 block mt-0.5 truncate">
-                    {verifiedItem.ownership_type === 'designer_consignment'
-                      ? verifiedItem.designer?.brand_name || 'Designer Atelier'
-                      : 'Bombay Saree Vault'}
+                <div className="p-3 bg-ivory-50 rounded-xl border border-ivory-200">
+                  <span className="text-charcoal-400 text-[10px] block font-mono">Provenance Archive</span>
+                  <span className="font-serif font-bold text-charcoal-900 block mt-0.5 truncate">
+                    Bombay Saree Heritage Loom
                   </span>
                 </div>
               </div>
 
               {/* Added Feedback */}
               {addedSuccess && (
-                <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+                <div className="p-3 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   <span>Added this exact physical piece to your shopping bag!</span>
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="pt-2 flex gap-2">
+              {/* Action 3D Buttons */}
+              <div className="pt-2 flex gap-3">
                 <button
                   type="button"
                   onClick={handleAddVerifiedToCart}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 text-burgundy-950 font-serif font-bold text-xs tracking-wider shadow-md hover:shadow-lg transition"
+                  className="btn-3d-gold flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-serif font-bold text-xs tracking-wider"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>Add This Piece to Bag</span>
@@ -357,10 +354,10 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
                         onClose();
                       }
                     }}
-                    className="p-3 rounded-xl bg-burgundy-900 hover:bg-burgundy-950 text-gold-300 font-semibold transition"
+                    className="btn-3d-burgundy p-3.5 rounded-2xl font-semibold transition"
                     title="View Full Drape Specifications"
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-4 h-4 text-gold-300" />
                   </button>
                 )}
               </div>
@@ -370,8 +367,8 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
 
         {/* Modal Footer */}
         <div className="bg-ivory-100 px-6 py-3.5 border-t border-ivory-300 flex items-center justify-between text-[11px] text-charcoal-500">
-          <div className="flex items-center gap-1.5 text-gold-700 font-medium">
-            <ShieldCheck className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 text-gold-800 font-serif font-semibold">
+            <ShieldCheck className="w-4 h-4 text-gold-600" />
             <span>Govt. Silk Mark Certified Single Piece Inventory</span>
           </div>
           <button
@@ -379,7 +376,7 @@ export const BarcodeVerificationModal: React.FC<BarcodeVerificationModalProps> =
               stopCamera();
               onClose();
             }}
-            className="text-charcoal-600 hover:text-charcoal-900 font-medium"
+            className="text-charcoal-600 hover:text-charcoal-900 font-serif font-bold"
           >
             Close
           </button>

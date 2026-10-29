@@ -7,7 +7,6 @@ import { PosProvider } from './context/PosContext';
 import { RoleSwitcherBar } from './components/common/RoleSwitcherBar';
 import { CustomerMode } from './pages/CustomerMode';
 import { StaffPosMode } from './pages/StaffPosMode';
-import { DesignerMode } from './pages/DesignerMode';
 import { AdminMode } from './pages/AdminMode';
 import { BombayDataStore } from './lib/storage';
 
@@ -38,11 +37,10 @@ const AppContent: React.FC = () => {
       {/* Top Admin Omnichannel Switcher Bar — ONLY visible to Admin */}
       {currentRole === 'admin' && <RoleSwitcherBar />}
 
-      {/* Role-Based Mode Router */}
+      {/* Role-Based Mode Router: Customer Boutique, Staff POS, Admin Console */}
       <div className="flex-1">
         {currentRole === 'customer' && <CustomerMode />}
         {currentRole === 'staff' && <StaffPosMode />}
-        {currentRole === 'designer' && <DesignerMode />}
         {currentRole === 'admin' && <AdminMode />}
       </div>
     </div>

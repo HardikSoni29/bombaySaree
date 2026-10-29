@@ -46,7 +46,7 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
   const wishlistCount = BombayDataStore.getWishlist(user.id).length;
 
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authModalTab, setAuthModalTab] = useState<'customer' | 'designer' | 'staff' | 'admin'>('customer');
+  const [authModalTab, setAuthModalTab] = useState<'customer' | 'staff' | 'admin'>('customer');
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const categories = [
@@ -58,7 +58,7 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
     { label: 'Organza & Pichwai', value: 'cat-organza' },
   ];
 
-  const openAuth = (tab: 'customer' | 'designer' | 'staff' | 'admin' = 'customer') => {
+  const openAuth = (tab: 'customer' | 'staff' | 'admin' = 'customer') => {
     setAuthModalTab(tab);
     setShowAuthModal(true);
   };
